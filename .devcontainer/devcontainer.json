@@ -1,0 +1,32 @@
+{
+  "name": "terraform-provider-secobserve",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": { "version": "1.25" },
+    "ghcr.io/devcontainers/features/terraform:1": { "version": "latest" },
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteEnv": {
+    "GOWORK": "off",
+    "SECOBSERVE_BASE_URL": "http://backend:8000"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "hashicorp.terraform",
+        "ms-azuretools.vscode-docker",
+        "timonwong.shellcheck"
+      ],
+      "settings": {
+        "go.lintTool": "golangci-lint",
+        "go.toolsEnvVars": { "GOWORK": "off" },
+        "gopls": { "formatting.gofumpt": false }
+      }
+    }
+  }
+}

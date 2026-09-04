@@ -1,0 +1,17 @@
+# Joins the development container to the acceptance-test stack's network so
+# the provider can reach the backend as http://backend:8000 without relying on
+# published ports.
+name: secobserve-provider-test
+
+services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/base:bookworm
+    volumes:
+      - ../..:/workspaces:cached
+      - ..:/workspace:cached
+    command: sleep infinity
+    # The backend is declared in ../test/docker-compose.yml. Nothing is
+    # duplicated here: `make up` starts it on this same compose network, so
+    # both stacks share the project name above.
+    environment:
+      SECOBSERVE_BASE_URL: http://backend:8000

@@ -1,0 +1,16 @@
+# Build output
+/terraform-provider-secobserve
+/dist/
+
+# Terraform working files from manual smoke tests
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/*.tfvars
+!examples/**/*.auto.tfvars.example
+
+# Local overrides of the test stack configuration
+/test/.env.local
+
+.DS_Store

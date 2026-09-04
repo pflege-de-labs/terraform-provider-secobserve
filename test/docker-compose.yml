@@ -1,0 +1,80 @@
+# Minimal SecObserve for provider development and acceptance tests.
+#
+# Deliberately not the upstream docker-compose-prod-*.yml: those add Traefik
+# and the frontend, neither of which a provider test needs. Only the backend
+# API and its database run here, with the backend's gunicorn port published
+# directly.
+name: secobserve-provider-test
+
+services:
+  backend:
+    image: ghcr.io/secobserve/secobserve-backend:${SECOBSERVE_VERSION}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+
+      GUNICORN_WORKERS: 2
+      GUNICORN_THREADS: 4
+
+      DATABASE_ENGINE: django.db.backends.postgresql
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_DB: ${POSTGRES_DB}
+      DATABASE_USER: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # The upstream default is secobserve-backend.localhost, which rejects
+      # requests that reach the container by any other name. "backend" covers
+      # callers on the compose network, the rest covers published-port callers.
+      ALLOWED_HOSTS: backend,localhost,127.0.0.1
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY}
+
+      # All OIDC_* variables have to be present even when OIDC is off; the
+      # backend reads them unconditionally. Empty OIDC_AUTHORITY disables the
+      # OIDC authentication class.
+      OIDC_AUTHORITY: ""
+      OIDC_CLIENT_ID: ""
+      OIDC_USERNAME: ""
+      OIDC_FIRST_NAME: ""
+      OIDC_LAST_NAME: ""
+      OIDC_FULL_NAME: ""
+      OIDC_EMAIL: ""
+      OIDC_GROUPS: ""
+    healthcheck:
+      # /api/status/health/ needs no authentication. curl is not in the image,
+      # but Python is.
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://localhost:8000/api/status/health/")
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  postgres:
+    image: postgres:15.19-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

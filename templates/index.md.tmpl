@@ -1,0 +1,30 @@
+---
+page_title: "SecObserve Provider"
+description: |-
+  Manage the configuration of a SecObserve instance with Terraform.
+---
+
+# SecObserve Provider
+
+Manages configuration of a [SecObserve](https://github.com/SecObserve/SecObserve)
+instance: products, product groups, branches, services, memberships,
+authorization groups, rules, API import configurations and license policies.
+
+Runtime data — observations, license components, scan results, metrics, VEX
+documents — is intentionally out of scope. Those belong in the CI/CD pipeline
+that runs the scanners, not in Terraform state.
+
+## Requirements
+
+- SecObserve {{ "1.58" }} or a compatible release. The provider is generated
+  against a pinned schema and warns when the instance's minor version differs.
+- A **superuser** user API token. SecObserve filters list responses for
+  non-superusers and rejects writes to users, general rules, settings and
+  periodic tasks; with a non-superuser token resources appear to drift on
+  every plan.
+
+## Example Usage
+
+{{ tffile "examples/provider/provider.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

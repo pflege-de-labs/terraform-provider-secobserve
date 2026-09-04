@@ -1,0 +1,38 @@
+version: "2"
+
+linters:
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - gocritic
+    - misspell
+    - nilerr
+    - revive
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - whitespace
+
+  settings:
+    revive:
+      rules:
+        # Exported provider plumbing is documented at the package level; the
+        # framework interface methods do not benefit from per-method comments.
+        - name: exported
+          arguments: ["disableChecksOnMethods"]
+
+  exclusions:
+    rules:
+      # Table-driven tests intentionally repeat literals.
+      - path: _test\.go
+        linters: [gocritic, unparam]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/jabbrwcky/terraform-provider-secobserve

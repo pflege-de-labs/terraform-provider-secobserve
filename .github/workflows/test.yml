@@ -1,0 +1,124 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # The provider is a standalone module; never inherit a parent go.work.
+  GOWORK: "off"
+
+jobs:
+  build:
+    name: build and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go build ./...
+      - run: go vet ./...
+      - name: check formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "these files are not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: v2.6.2
+
+  unit:
+    name: unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go test ./... -timeout 5m
+
+  acceptance:
+    name: acceptance tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest Terraform the provider claims to support, and the latest.
+        terraform: ["1.11.*", "1.15.*"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ matrix.terraform }}
+          terraform_wrapper: false
+
+      - name: start SecObserve
+        run: docker compose --env-file test/.env -f test/docker-compose.yml up -d
+
+      - name: bootstrap API token
+        run: ./test/bootstrap.sh --format=env >> "$GITHUB_ENV"
+
+      - name: run acceptance tests
+        run: TF_ACC=1 go test ./... -v -timeout 30m
+
+      - name: backend logs on failure
+        if: failure()
+        run: docker compose --env-file test/.env -f test/docker-compose.yml logs backend
+
+      - name: stop SecObserve
+        if: always()
+        run: docker compose --env-file test/.env -f test/docker-compose.yml down --volumes
+
+  schema:
+    name: vendored schema is current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: is the schema vendored yet?
+        id: vendored
+        run: |
+          if [ -f api/openapi.json ]; then
+            echo "result=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::api/openapi.json is not vendored yet; skipping the drift check."
+          fi
+      - name: start SecObserve
+        if: steps.vendored.outputs.result == 'true'
+        run: docker compose --env-file test/.env -f test/docker-compose.yml up -d
+      - name: refetch schema and regenerate
+        if: steps.vendored.outputs.result == 'true'
+        run: |
+          eval "$(./test/bootstrap.sh)"
+          make schema
+          make tools
+          make generate
+      - name: fail if the committed schema or client is stale
+        if: steps.vendored.outputs.result == 'true'
+        run: |
+          if ! git diff --exit-code -- api/; then
+            echo "The vendored OpenAPI schema or the generated client is out of date."
+            echo "Run 'make up && eval \"\$(./test/bootstrap.sh)\" && make schema && make generate' and commit the result."
+            exit 1
+          fi
+      - name: stop SecObserve
+        if: always()
+        run: docker compose --env-file test/.env -f test/docker-compose.yml down --volumes

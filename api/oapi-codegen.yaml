@@ -1,0 +1,10 @@
+package: api
+output: models.gen.go
+generate:
+  models: true
+output-options:
+  skip-prune: true
+  # Response bodies mix required and optional members per action (the list and
+  # detail serializers differ), so pointers are needed to tell "absent" from
+  # "zero".
+  prefer-skip-optional-pointer: false
