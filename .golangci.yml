@@ -22,11 +22,27 @@ linters:
         - name: exported
           arguments: ["disableChecksOnMethods"]
 
+    staticcheck:
+      checks:
+        - all
+        # QF1008 wants promoted fields addressed without naming the embedded
+        # struct. Resource models are assembled from embedded attribute
+        # blocks, and naming the block is how a reader tells which one an
+        # attribute belongs to.
+        - -QF1008
+
   exclusions:
     rules:
       # Table-driven tests intentionally repeat literals.
       - path: _test\.go
         linters: [gocritic, unparam]
+
+      # Resource and data source packages are named after the Terraform type
+      # they implement -- secobserve_product_group lives in product_group --
+      # which makes the mapping obvious at the cost of an underscore. Only the
+      # package-name half of ST1003 is silenced; initialism checks stay on.
+      - text: "should not use underscores in package names"
+        linters: [staticcheck, revive]
 
 formatters:
   enable:

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -130,8 +131,8 @@ func TestTransportErrorIsRetryable(t *testing.T) {
 
 func asAPIError(t *testing.T, err error) *APIError {
 	t.Helper()
-	apiErr, ok := err.(*APIError)
-	if !ok {
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
 		t.Fatalf("expected *APIError, got %T: %v", err, err)
 	}
 	return apiErr

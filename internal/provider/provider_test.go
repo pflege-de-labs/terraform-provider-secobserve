@@ -1,8 +1,10 @@
 package provider_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -25,4 +27,11 @@ func testAccPreCheck(t *testing.T) {
 			t.Fatalf("%s must be set for acceptance tests; run: make up && eval \"$(./test/bootstrap.sh)\"", envVar)
 		}
 	}
+}
+
+// acceptanceName builds a name unlikely to collide with anything already on
+// the instance. Product and product group names share one unique constraint,
+// so a collision fails the whole test rather than just one step.
+func acceptanceName(prefix string) string {
+	return fmt.Sprintf("tfacc-%s-%d", prefix, time.Now().UnixNano())
 }

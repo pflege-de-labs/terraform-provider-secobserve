@@ -17,7 +17,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
+	branchdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/branch"
 	parserdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/parser"
+	productdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/product"
+	productgroupdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/product_group"
+	servicedatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/service"
+	branchresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/branch"
+	productresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product"
+	productapitokenresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_api_token"
+	productauthorizationgroupmemberresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_authorization_group_member"
+	productgroupresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_group"
+	productmemberresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_member"
+	serviceresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/service"
 )
 
 const (
@@ -208,11 +219,23 @@ func verifyInstance(ctx context.Context, apiClient *client.Client, diags *diag.D
 }
 
 func (p *secObserveProvider) Resources(_ context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		productgroupresource.New,
+		productresource.New,
+		branchresource.New,
+		serviceresource.New,
+		productmemberresource.New,
+		productauthorizationgroupmemberresource.New,
+		productapitokenresource.New,
+	}
 }
 
 func (p *secObserveProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		productdatasource.New,
+		productgroupdatasource.New,
+		branchdatasource.New,
+		servicedatasource.New,
 		parserdatasource.NewParserDataSource,
 		parserdatasource.NewParsersDataSource,
 	}
