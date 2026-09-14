@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
 )
 
 // ResourceClient extracts the API client the provider handed down.

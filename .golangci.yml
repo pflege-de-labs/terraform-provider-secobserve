@@ -51,4 +51,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/jabbrwcky/terraform-provider-secobserve
+        - github.com/pflege-de-labs/terraform-provider-secobserve

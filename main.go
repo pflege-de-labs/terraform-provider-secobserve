@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/provider"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/provider"
 )
 
 // version is set by goreleaser via -ldflags at release time.
@@ -19,7 +19,7 @@ func main() {
 	flag.Parse()
 
 	err := providerserver.Serve(context.Background(), provider.New(version), providerserver.ServeOpts{
-		Address: "registry.terraform.io/jabbrwcky/secobserve",
+		Address: "registry.terraform.io/pflege-de-labs/secobserve",
 		Debug:   debug,
 	})
 	if err != nil {

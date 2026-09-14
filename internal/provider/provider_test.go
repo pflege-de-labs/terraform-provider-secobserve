@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/provider"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/provider"
 )
 
 // testAccProtoV6ProviderFactories wires the in-process provider into the

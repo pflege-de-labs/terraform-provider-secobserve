@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/schemacommon"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/schemacommon"
 )
 
 func (r *productGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {

@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/tfutil"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/tfutil"
 )
 
 // SecurityGate is the security gate block of a product or product group.

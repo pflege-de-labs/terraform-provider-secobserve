@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     secobserve = {
-      source = "jabbrwcky/secobserve"
+      source = "pflege-de-labs/secobserve"
     }
   }
 }
