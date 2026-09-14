@@ -103,6 +103,7 @@ from the response body will show a permanent diff.
 | Field | Behaviour | Source |
 |---|---|---|
 | `security_gate_threshold_*` | filled from global settings when `security_gate_active` is true and the value was omitted; forced to null when it is false | `core/api/serializers_product.py:122-142` |
+| `security_gate_threshold_*` set to `0` | the fill-in test is `if not attrs.get(...)` — truthiness, not presence — so a submitted `0` counts as unset and is replaced by the instance default (`99999` for medium, low, none and unknown) | `core/api/serializers_product.py:122-134` |
 | `repository_branch_housekeeping_keep_inactive_days`, `_exempt_branches` | same fill-or-clear pattern driven by `repository_branch_housekeeping_active` | `serializers_product.py:112-120` |
 | `propagate_branches` | an empty or effectively-empty list is stored as `null`, not `[]` | `serializers_product.py:660-663` |
 | `license_policy_item.license_expression` | re-normalised through `spdx_licensing.validate(strict=True)`; the stored value can differ from the submitted one | `licenses/api/serializers.py:591-600` |
@@ -110,11 +111,49 @@ from the response body will show a permanent diff.
 | `product.observation_notification_statuses` | comma-joined column exposed as the list `observation_notification_status_list` | `serializers_product.py:256-270` |
 | rule `approval_status`, `user`, `approval_*`, `rejection_remark` | server-owned; **any** update resets approval and reassigns `user` | `rules/api/serializers.py:62-64,112-114`, `rules/models.py:75-101` |
 
+### What this means for the provider
+
+Writing state from the response body is necessary but not sufficient.
+Terraform additionally requires that the value applied to an attribute equals
+the value that was planned for it, unless the plan said unknown. Two
+consequences fall out of that, both learned the hard way and both covered by
+tests in `internal/provider/product_stub_test.go`:
+
+1. **A threshold of `0` is not representable and is rejected at plan time.**
+   Accepting it produces `Provider produced inconsistent result after apply:
+   .security_gate_threshold_medium: was cty.NumberIntVal(0), but now
+   cty.NumberIntVal(99999)`. The rejection is unconditional rather than only
+   when `security_gate_active` is true, because the gate can also be switched
+   on by the product group, which is not visible at plan time. While the gate
+   is off the thresholds are not evaluated anyway, so nothing is lost.
+
+2. **An attribute the server recomputes must be planned as unknown when the
+   sibling it derives from changes.** For an unset `Optional + Computed`
+   attribute the framework carries the prior state value into the plan, which
+   the server then legitimately contradicts. Planning unknown unconditionally
+   is not an option either: it makes every plan show a diff for attributes
+   nobody touched. `schemacommon.Int64UnknownWhenBoolSiblingChanges` and its
+   string counterpart restrict it to the case that matters, and are wired to
+   the six thresholds (sibling `security_gate_active`),
+   `repository_branch_housekeeping_keep_inactive_days` (sibling
+   `repository_branch_housekeeping_active`) and `issue_tracker_base_url`
+   (sibling `issue_tracker_type`).
+
 ## Values that never round-trip
 
 - `product.issue_tracker_api_key` is accepted on write but removed from
   responses unless the caller holds `Product_Edit`
-  (`serializers_product.py:252-254`).
+  (`serializers_product.py:252-254`). Since the provider requires a superuser
+  it does round-trip in practice, which matters because it **cannot** be a
+  write-only attribute: SecObserve requires `issue_tracker_type`,
+  `issue_tracker_base_url`, `issue_tracker_api_key` and
+  `issue_tracker_project_id` to be either all set or all empty
+  (`serializers_product.py:565-574`). A write-only value is absent from state,
+  so a later update could neither resend the key nor omit it — sending `""`
+  fails the check, and so does omitting it, because the check reads
+  `attrs.get("issue_tracker_api_key")` and a missing key is falsy while the
+  other three are set. It is therefore a plain sensitive attribute, stored in
+  state.
 - `api_configuration.api_key` behaves the same way
   (`import_observations/api/serializers.py:111-119`).
 - `api_configuration.test_connection` is a write-only side-effecting flag that

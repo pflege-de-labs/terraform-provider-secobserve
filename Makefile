@@ -10,6 +10,11 @@ COMPOSE     := docker compose --env-file test/.env -f test/docker-compose.yml
 COMPOSE_OIDC:= $(COMPOSE) -f test/docker-compose.oidc.yml
 BASE_URL    ?= http://localhost:8000
 
+# Apple `container` targets. HOST_ADDRESS overrides how the container reaches
+# the host; empty means auto-detect. See test/apple-container.md.
+CONTAINER_NAME ?= secobserve-backend
+HOST_ADDRESS   ?=
+
 # The parent directory may contain an unrelated go.work; the provider is a
 # standalone module and must not be pulled into someone else's workspace.
 export GOWORK := off
@@ -17,7 +22,7 @@ export GOWORK := off
 # Pinned tool versions. Keep in sync with .devcontainer/post-create.sh.
 OAPI_CODEGEN_VERSION := v2.5.0
 TFPLUGINDOCS_VERSION := v0.23.0
-GOLANGCI_LINT_VERSION:= v2.6.2
+GOLANGCI_LINT_VERSION:= v2.13.2
 
 .PHONY: help
 help: ## Show this help
@@ -69,6 +74,23 @@ down: ## Stop the stack and delete its volumes
 .PHONY: logs
 logs: ## Tail the backend logs
 	$(COMPOSE) logs -f backend
+
+# Apple `container` instead of Docker Compose, with PostgreSQL on the host.
+# Kept as separate targets so it is always obvious which stack is being driven.
+# See test/apple-container.md for the one-time host setup.
+.PHONY: container-up
+container-up: ## Start SecObserve under Apple container (host PostgreSQL)
+	@./test/container-up.sh $(HOST_ADDRESS)
+
+.PHONY: container-down
+container-down: ## Stop and remove the Apple container (leaves the host database alone)
+	@container stop $(CONTAINER_NAME) 2>/dev/null || true
+	@container rm $(CONTAINER_NAME) 2>/dev/null || true
+	@echo "removed $(CONTAINER_NAME); the host database was not touched"
+
+.PHONY: container-logs
+container-logs: ## Follow the Apple container's logs
+	container logs --follow $(CONTAINER_NAME)
 
 .PHONY: schema
 schema: ## Refetch the OpenAPI schema from the running instance

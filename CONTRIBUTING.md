@@ -4,7 +4,9 @@
 
 A devcontainer is provided and is the least surprising way to work on this
 provider: it pins the Go and tool versions, joins the container to the
-acceptance-test network so the backend is reachable as `http://backend:8000`,
+acceptance-test network so the backend is reachable as `http://backend:5000`
+(gunicorn's real listen port; container-to-container traffic bypasses the
+host-side publish mapping),
 and pre-configures `dev_overrides` so the examples run against the locally
 built binary without `terraform init`.
 
@@ -29,6 +31,11 @@ make down                      # stop it and delete the volumes
 `make down` deletes the volumes on purpose. SecObserve performs its SPDX and
 ScanCode license import on first start, and the license tests depend on that
 state being pristine.
+
+Without Docker, `make container-up` runs the backend under Apple's `container`
+CLI against a PostgreSQL on the host. It needs one piece of host setup and has
+its own trade-offs; `test/apple-container.md` covers both. Compose stays the
+default and is what CI uses.
 
 For the OIDC tests, `make up-oidc` adds Keycloak with the realm vendored from
 upstream (realm `secobserve`, public client `secobserve`, user
@@ -67,16 +74,34 @@ make testacc     # acceptance tests against the containerized instance
 make testacc-oidc
 ```
 
-Every resource must have an acceptance test that **applies twice and asserts
-the second plan is empty**. This is not boilerplate: SecObserve silently
-rewrites submitted values in a dozen places (see
-`docs/design/api-quirks.md`), and a plain create/read test does not catch it.
-Use `plancheck.ExpectEmptyPlan()` in a post-apply `ConfigPlanChecks`.
+Every resource must have a test that **applies and then asserts the plan is
+empty**. This is not boilerplate: SecObserve silently rewrites submitted
+values in a dozen places (see `docs/design/api-quirks.md`), and a plain
+create/read test does not catch it. Use `plancheck.ExpectEmptyPlan()` in a
+`PostApplyPostRefresh` `ConfigPlanChecks`.
 
-Two further rules that follow from the same section:
+### The stub
+
+`internal/provider/stub_test.go` is a small SecObserve stand-in that
+reproduces the server behaviours the provider has to absorb: the security gate
+and branch housekeeping fill-and-clear logic including its truthiness test,
+the empty-propagation normalization, the delete name confirmation and the
+GitHub base URL default. Tests written against it run in `make test` with no
+container, and they are what surfaced both of the design corrections recorded
+in `api-quirks.md`.
+
+Prefer the stub for anything drift-shaped, and a real acceptance test for
+anything where the question is "does SecObserve accept this payload". When you
+learn a new server behaviour, teach the stub about it in the same commit.
+
+Three rules that follow from the same section:
 
 - Always write resource state from the API response body, never from the plan.
 - Attributes the server may fill in or clear must be `Optional + Computed`.
+- If the server recomputes an attribute when a sibling changes, give it
+  `schemacommon.Int64UnknownWhenBoolSiblingChanges` or its string counterpart.
+  Terraform requires the applied value to match the planned one unless the plan
+  said unknown, and the framework otherwise plans the stale prior value.
 
 ## Documentation
 

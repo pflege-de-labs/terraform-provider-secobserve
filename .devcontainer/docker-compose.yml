@@ -1,5 +1,5 @@
 # Joins the development container to the acceptance-test stack's network so
-# the provider can reach the backend as http://backend:8000 without relying on
+# the provider can reach the backend as http://backend:5000 without relying on
 # published ports.
 name: secobserve-provider-test
 
@@ -13,5 +13,9 @@ services:
     # The backend is declared in ../test/docker-compose.yml. Nothing is
     # duplicated here: `make up` starts it on this same compose network, so
     # both stacks share the project name above.
+    #
+    # Container-to-container traffic on a compose network goes straight to
+    # the target's real listen port -- gunicorn's hardcoded 5000, not the
+    # host-side 8000 that test/docker-compose.yml publishes.
     environment:
-      SECOBSERVE_BASE_URL: http://backend:8000
+      SECOBSERVE_BASE_URL: http://backend:5000
