@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/tfutil"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/tfutil"
 )
 
 var _ datasource.DataSourceWithConfigure = (*branchDataSource)(nil)

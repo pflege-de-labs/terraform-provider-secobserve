@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/tfutil"
-	sovalidators "github.com/jabbrwcky/terraform-provider-secobserve/internal/validators"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/tfutil"
+	sovalidators "github.com/pflege-de-labs/terraform-provider-secobserve/internal/validators"
 )
 
 // BranchHousekeeping is the branch housekeeping block of a product or product

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
-	dscommon "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/common"
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/tfutil"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
+	dscommon "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/common"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/tfutil"
 )
 
 var (

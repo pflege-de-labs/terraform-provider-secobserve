@@ -1,4 +1,4 @@
-module github.com/jabbrwcky/terraform-provider-secobserve
+module github.com/pflege-de-labs/terraform-provider-secobserve
 
 go 1.25.8
 

@@ -22,7 +22,7 @@ bindir="$(go env GOBIN)"
 cat > "${HOME}/.terraformrc" <<TERRAFORMRC
 provider_installation {
   dev_overrides {
-    "jabbrwcky/secobserve" = "${bindir}"
+    "pflege-de-labs/secobserve" = "${bindir}"
   }
   direct {}
 }

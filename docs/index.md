@@ -29,7 +29,7 @@ that runs the scanners, not in Terraform state.
 terraform {
   required_providers {
     secobserve = {
-      source = "jabbrwcky/secobserve"
+      source = "pflege-de-labs/secobserve"
     }
   }
 }

@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/tfutil"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/tfutil"
 )
 
 // ValidateConfig mirrors SecObserve's cross-field validation so the errors

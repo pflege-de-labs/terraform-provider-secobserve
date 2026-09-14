@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/schemacommon"
-	sovalidators "github.com/jabbrwcky/terraform-provider-secobserve/internal/validators"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/schemacommon"
+	sovalidators "github.com/pflege-de-labs/terraform-provider-secobserve/internal/validators"
 )
 
 // crontabMinute and crontabHour build the paired attributes for the several

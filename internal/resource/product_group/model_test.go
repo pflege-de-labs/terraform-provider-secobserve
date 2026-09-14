@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/schemacommon"
-	"github.com/jabbrwcky/terraform-provider-secobserve/internal/tftest"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/schemacommon"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/tftest"
 )
 
 // The model is assembled from embedded blocks that the framework flattens.
