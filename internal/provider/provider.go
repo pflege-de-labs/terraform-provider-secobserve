@@ -25,14 +25,17 @@ import (
 	productgroupdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/product_group"
 	servicedatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/service"
 	userdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/user"
+	apiconfigurationresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/api_configuration"
 	authorizationgroupresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/authorization_group"
 	authorizationgroupmemberresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/authorization_group_member"
 	branchresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/branch"
+	generalruleresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/general_rule"
 	productresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product"
 	productapitokenresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_api_token"
 	productauthorizationgroupmemberresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_authorization_group_member"
 	productgroupresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_group"
 	productmemberresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_member"
+	productruleresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_rule"
 	serviceresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/service"
 	settingsresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/settings"
 	userresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/user"
@@ -238,6 +241,9 @@ func (p *secObserveProvider) Resources(_ context.Context) []func() resource.Reso
 		authorizationgroupresource.New,
 		authorizationgroupmemberresource.New,
 		settingsresource.New,
+		generalruleresource.New,
+		productruleresource.New,
+		apiconfigurationresource.New,
 	}
 }
 

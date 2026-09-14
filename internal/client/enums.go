@@ -68,3 +68,28 @@ var ParserTypes = []string{"SCA", "SAST", "DAST", "IAST", "Secrets", "Infrastruc
 // enums here this one has no blank choice: the model field has a default but
 // no blank=True.
 var VEXJustificationStyles = []string{"CSAF/OpenVEX", "CycloneDX"}
+
+// RuleTypes are the values of Rule_Type.RULE_TYPE_CHOICES (rules/types.py).
+var RuleTypes = []string{"Fields", "Rego"}
+
+// RuleTypeRego is the one rule type that requires rego_module to be set.
+const RuleTypeRego = "Rego"
+
+// VEXJustifications are the values of VEX_Justification.VEX_JUSTIFICATION_CHOICES
+// (core/types.py), used by rule.new_vex_justification.
+var VEXJustifications = []string{
+	"component_not_present",
+	"vulnerable_code_not_present",
+	"vulnerable_code_cannot_be_controlled_by_adversary",
+	"vulnerable_code_not_in_execute_path",
+	"inline_mitigations_already_exist",
+	"code_not_present",
+	"code_not_reachable",
+	"requires_configuration",
+	"requires_dependency",
+	"requires_environment",
+	"protected_by_compiler",
+	"protected_at_runtime",
+	"protected_at_perimeter",
+	"protected_by_mitigating_control",
+}
