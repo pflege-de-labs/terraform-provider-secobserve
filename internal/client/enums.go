@@ -93,3 +93,17 @@ var VEXJustifications = []string{
 	"protected_at_perimeter",
 	"protected_by_mitigating_control",
 }
+
+// LicensePolicyEvaluationResults are the values of
+// License_Policy_Evaluation_Result.RESULT_CHOICES (licenses/types.py). Note
+// the space in "Review required".
+var LicensePolicyEvaluationResults = []string{"Allowed", "Forbidden", "Ignored", "Review required", "Unknown"}
+
+// PurlTypes are the keys of PURL_Type.PURL_TYPE_CHOICES (core/types.py), used
+// by license_policy.ignore_component_type_list.
+var PurlTypes = []string{
+	"alpm", "apk", "bitbucket", "bitnami", "cargo", "cocoapods", "composer", "conan",
+	"conda", "cpan", "cran", "deb", "docker", "gem", "generic", "github", "golang",
+	"hackage", "hex", "huggingface", "luarocks", "maven", "mlflow", "npm", "nuget",
+	"oci", "pub", "pypi", "rpm", "qpkg", "swid", "swift",
+}
