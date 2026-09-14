@@ -16,13 +16,13 @@ Grants an authorization group a role on a product or a product group. The same e
 ## Example Usage
 
 ```terraform
-variable "platform_team_group_id" {
-  type = number
+data "secobserve_authorization_group" "platform_team" {
+  name = "Platform Team"
 }
 
 resource "secobserve_product_authorization_group_member" "platform_team" {
   product             = secobserve_product.checkout.id
-  authorization_group = var.platform_team_group_id
+  authorization_group = data.secobserve_authorization_group.platform_team.id
   role                = "Writer"
 }
 
