@@ -16,16 +16,13 @@ Grants a user a role on a product or a product group. The same endpoint serves b
 ## Example Usage
 
 ```terraform
-# Users are looked up by id. The secobserve_user data source arrives with the
-# access-control resources; until then, take the id from the SecObserve UI or
-# from GET /api/users/.
-variable "alice_user_id" {
-  type = number
+data "secobserve_user" "alice" {
+  username = "alice"
 }
 
 resource "secobserve_product_member" "alice" {
   product = secobserve_product.checkout.id
-  user    = var.alice_user_id
+  user    = data.secobserve_user.alice.id
   role    = "Maintainer"
 }
 

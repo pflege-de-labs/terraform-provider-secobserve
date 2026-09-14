@@ -57,3 +57,14 @@ const GitHubDefaultBaseURL = "https://api.github.com"
 // RoleNameList is RoleNames in ascending order of privilege, for schema
 // descriptions and validators.
 var RoleNameList = []string{"Reader", "Upload", "Writer", "Maintainer", "Owner"}
+
+// ParserTypes are the values of Parser_Type.TYPE_CHOICES
+// (import_observations/types.py), used by secobserve_settings'
+// observation_title_notification_parser_type.
+var ParserTypes = []string{"SCA", "SAST", "DAST", "IAST", "Secrets", "Infrastructure", "Other", "Manual"}
+
+// VEXJustificationStyles are the values of
+// VEX_Justification_Styles.STYLE_CHOICES (commons/types.py). Unlike most
+// enums here this one has no blank choice: the model field has a default but
+// no blank=True.
+var VEXJustificationStyles = []string{"CSAF/OpenVEX", "CycloneDX"}

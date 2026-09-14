@@ -17,11 +17,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/jabbrwcky/terraform-provider-secobserve/internal/client"
+	authorizationgroupdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/authorization_group"
 	branchdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/branch"
 	parserdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/parser"
+	periodictasksdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/periodic_tasks"
 	productdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/product"
 	productgroupdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/product_group"
 	servicedatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/service"
+	userdatasource "github.com/jabbrwcky/terraform-provider-secobserve/internal/datasource/user"
+	authorizationgroupresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/authorization_group"
+	authorizationgroupmemberresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/authorization_group_member"
 	branchresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/branch"
 	productresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product"
 	productapitokenresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_api_token"
@@ -29,6 +34,8 @@ import (
 	productgroupresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_group"
 	productmemberresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/product_member"
 	serviceresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/service"
+	settingsresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/settings"
+	userresource "github.com/jabbrwcky/terraform-provider-secobserve/internal/resource/user"
 )
 
 const (
@@ -227,6 +234,10 @@ func (p *secObserveProvider) Resources(_ context.Context) []func() resource.Reso
 		productmemberresource.New,
 		productauthorizationgroupmemberresource.New,
 		productapitokenresource.New,
+		userresource.New,
+		authorizationgroupresource.New,
+		authorizationgroupmemberresource.New,
+		settingsresource.New,
 	}
 }
 
@@ -238,6 +249,9 @@ func (p *secObserveProvider) DataSources(_ context.Context) []func() datasource.
 		servicedatasource.New,
 		parserdatasource.NewParserDataSource,
 		parserdatasource.NewParsersDataSource,
+		userdatasource.New,
+		authorizationgroupdatasource.New,
+		periodictasksdatasource.New,
 	}
 }
 
