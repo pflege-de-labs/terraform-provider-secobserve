@@ -184,7 +184,9 @@ Everything runs against a containerized SecObserve — no shared instance is eve
 
 ### `test/docker-compose.yml`
 
-Deliberately **not** the upstream `docker-compose-prod-*.yml`: those add Traefik and the frontend, which a provider test does not need. The stack is `postgres:15.19-alpine` plus `ghcr.io/secobserve/secobserve-backend:${SECOBSERVE_VERSION}` (published image, no source build) with the backend's gunicorn port **8000** published directly. Environment derived from the upstream prod compose (`docker-compose-prod-postgres.yml:58-105`):
+Deliberately **not** the upstream `docker-compose-prod-*.yml`: those add Traefik and the frontend, which a provider test does not need — and, notably, publish **no host port at all** for the backend, reaching it only through Traefik on the shared Docker network. The stack here is `postgres:15.19-alpine` plus `ghcr.io/secobserve/secobserve-backend:${SECOBSERVE_VERSION}` (published image, no source build), with gunicorn's real listen port **5000** (hardcoded in the image's entrypoint, `docker/backend/prod/django/entrypoint:run_server` — not configurable via environment variable) published to the host as **8000**.
+
+**Correction, found only once this was actually run end to end:** this design originally assumed gunicorn listens on 8000, and every file that talks to the backend directly by port — the Compose service, `container-up.sh`, the devcontainer's container-to-container URL — inherited that assumption uncorrected, because the whole stack was never exercised against a real container until later. Fixed throughout; anything that reaches the backend from **inside** its own container or from another container on the same network must use `5000`. Only a caller going through the **host-published** port (`test/bootstrap.sh`, `make schema`'s `BASE_URL` default) legitimately uses `8000`, because that is the host side of the `8000:5000` publish mapping. Environment derived from the upstream prod compose (`docker-compose-prod-postgres.yml:58-105`):
 
 - `ADMIN_USER=admin`, `ADMIN_PASSWORD` set explicitly (if unset, SecObserve generates a random one and only logs it).
 - `ALLOWED_HOSTS=localhost,127.0.0.1,backend` — the upstream default is `secobserve-backend.localhost` and would reject direct-port requests.
@@ -192,6 +194,22 @@ Deliberately **not** the upstream `docker-compose-prod-*.yml`: those add Traefik
 - A healthcheck on `GET /api/status/health/` (public, no auth) so `bootstrap.sh` can wait deterministically instead of sleeping.
 
 `test/bootstrap.sh` waits for health, then `POST /api/authentication/create_user_api_token/` with the admin username/password to mint the superuser token, and prints `SECOBSERVE_BASE_URL` / `SECOBSERVE_API_TOKEN` exports. `make up` runs compose + bootstrap; `make down` tears down including volumes so every acceptance run starts from a fresh database (the SPDX/ScanCode initial load runs on first start, which the license tests depend on).
+
+### Apple `container` + host PostgreSQL
+
+A second, documented route for machines without Docker: only the backend runs in
+a container, PostgreSQL stays on the host as a Homebrew service. Compose remains
+the default and the CI path. `test/apple-container.md` is authoritative; the one
+design note worth recording here is that Apple's vmnet gateway
+(`192.168.64.1`) cannot be bound on the host, and neither host-access option
+makes the connection look like loopback to PostgreSQL — it always sees the
+container's own address, so `pg_hba.conf` needs a rule for `192.168.64.0/24`
+either way.
+
+Deliberately not covered: a `container` equivalent of the Keycloak overlay. The
+OIDC tests need the backend and Keycloak on one network with a pinned
+`KC_HOSTNAME`, which Compose already handles, so `make testacc-oidc` stays
+Compose-only.
 
 ### `test/docker-compose.oidc.yml`
 
@@ -201,7 +219,7 @@ Used only by the OIDC-caveat acceptance tests (build tag `oidc`, skipped by defa
 
 ### `.devcontainer/`
 
-`devcontainer.json` with the Go feature (matching `go.mod`), the Terraform feature (CLI for the manual smoke test), `github-cli`, and **docker-outside-of-docker** so the `test/` stack is reachable from inside the container. `post-create.sh` runs `go mod download` and installs `oapi-codegen`, `tfplugindocs` and `golangci-lint` at pinned versions. A `.devcontainer/docker-compose.yml` joins the dev container to the `test/` stack's network so `SECOBSERVE_BASE_URL=http://backend:8000` works without published ports, and mounts a `~/.terraformrc` with the `dev_overrides` block pointing at the container's `$GOPATH/bin` — so `terraform plan` in `examples/` uses the locally built provider with no `terraform init`.
+`devcontainer.json` with the Go feature (matching `go.mod`), the Terraform feature (CLI for the manual smoke test), `github-cli`, and **docker-outside-of-docker** so the `test/` stack is reachable from inside the container. `post-create.sh` runs `go mod download` and installs `oapi-codegen`, `tfplugindocs` and `golangci-lint` at pinned versions. A `.devcontainer/docker-compose.yml` joins the dev container to the `test/` stack's network so `SECOBSERVE_BASE_URL=http://backend:5000` works without published ports (the container's real listen port, not the host-side one), and mounts a `~/.terraformrc` with the `dev_overrides` block pointing at the container's `$GOPATH/bin` — so `terraform plan` in `examples/` uses the locally built provider with no `terraform init`.
 
 ## Resources — phased delivery
 

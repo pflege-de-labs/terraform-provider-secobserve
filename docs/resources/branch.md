@@ -50,7 +50,7 @@ resource "secobserve_branch" "release" {
 
 Setting it also updates the product's read-only `repository_default_branch` and clears the flag on the product's other branches.
 
-~> SecObserve refuses to delete the default branch. Move the flag to another branch before destroying this one.
+~> SecObserve refuses to delete the default branch, and `terraform destroy` tears branches down independently of the product, in dependency order, so it hits this even when destroying everything. Moving the flag to another branch only relocates the problem to that branch. Set `is_default_branch = false` on every branch of the product in a preceding apply before destroying; SecObserve allows a product with no default branch.
 - `osv_linux_distribution` (String) Linux distribution to consider when matching OSV advisories for this branch, overriding the product's setting. One of `AlmaLinux`, `Alpine`, `Chainguard`, `Debian`, `Mageia`, `openSUSE`, `Photon OS`, `Red Hat`, `Rocky Linux`, `SUSE`, `Ubuntu`, `Wolfi`.
 - `osv_linux_release` (String) Release of the Linux distribution. Requires `osv_linux_distribution` to be set.
 - `purl` (String) Package URL identifying this branch. Validated server-side.

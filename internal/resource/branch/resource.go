@@ -100,8 +100,11 @@ func (r *branchResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				MarkdownDescription: "Whether this is the product's default branch.\n\n" +
 					"Setting it also updates the product's read-only `repository_default_branch` and clears " +
 					"the flag on the product's other branches.\n\n" +
-					"~> SecObserve refuses to delete the default branch. Move the flag to another branch " +
-					"before destroying this one.",
+					"~> SecObserve refuses to delete the default branch, and `terraform destroy` tears branches " +
+					"down independently of the product, in dependency order, so it hits this even when " +
+					"destroying everything. Moving the flag to another branch only relocates the problem to " +
+					"that branch. Set `is_default_branch = false` on every branch of the product in a preceding " +
+					"apply before destroying; SecObserve allows a product with no default branch.",
 			},
 			"housekeeping_protect": schema.BoolAttribute{
 				Optional:            true,
@@ -282,8 +285,10 @@ func (r *branchResource) explainDeleteFailure(err error, state model, diags *dia
 		diags.AddError(
 			"SecObserve refused to delete the default branch",
 			fmt.Sprintf("Branch %q is the default branch of product %d, and SecObserve does not allow "+
-				"deleting it.\n\nMove is_default_branch to another branch of the product first, then destroy "+
-				"this one.\n\nUnderlying error: %s",
+				"deleting it.\n\nSet is_default_branch = false on every branch of this product in a preceding "+
+				"apply, then destroy. Moving the flag to another branch only relocates the problem, since "+
+				"Terraform destroys branches independently of the product, in dependency order.\n\n"+
+				"Underlying error: %s",
 				state.Name.ValueString(), state.Product.ValueInt64(), err),
 		)
 		return

@@ -145,11 +145,35 @@ resource "secobserve_branch" "next" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("secobserve_branch.main", "is_default_branch", "true"),
 					resource.TestCheckResourceAttr("secobserve_branch.next", "is_default_branch", "false"),
-					// The product picks the default branch up as a computed value.
-					resource.TestCheckResourceAttrPair(
-						"secobserve_product.test", "repository_default_branch",
-						"secobserve_branch.main", "id"),
 				),
+			},
+			{
+				// secobserve_product.test.repository_default_branch is set by a
+				// side effect of creating secobserve_branch.main, but nothing in
+				// the config makes the product depend on the branch, so a single
+				// apply never re-reads the product afterwards. Reapplying the
+				// same config (a no-op that still refreshes) is what surfaces it.
+				Config: fmt.Sprintf(`
+resource "secobserve_product" "test" {
+  name = %q
+}
+
+resource "secobserve_branch" "main" {
+  product           = secobserve_product.test.id
+  name              = "main"
+  is_default_branch = true
+}
+
+resource "secobserve_branch" "next" {
+  product = secobserve_product.test.id
+  name    = "next"
+}`, product),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.TestCheckResourceAttrPair(
+					"secobserve_product.test", "repository_default_branch",
+					"secobserve_branch.main", "id"),
 			},
 			{
 				// Moving the flag: SecObserve clears it on the old holder, so
@@ -175,6 +199,34 @@ resource "secobserve_branch" "next" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("secobserve_branch.main", "is_default_branch", "false"),
 					resource.TestCheckResourceAttr("secobserve_branch.next", "is_default_branch", "true"),
+				),
+			},
+			{
+				// Terraform destroys branches independently of the product,
+				// in dependency order, and SecObserve unconditionally refuses
+				// to delete a default branch -- so a real `terraform destroy`
+				// hits the same 400 this test would hit at teardown if a
+				// branch were still marked default. Clear it first.
+				Config: fmt.Sprintf(`
+resource "secobserve_product" "test" {
+  name = %q
+}
+
+resource "secobserve_branch" "main" {
+  product = secobserve_product.test.id
+  name    = "main"
+}
+
+resource "secobserve_branch" "next" {
+  product = secobserve_product.test.id
+  name    = "next"
+}`, product),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("secobserve_branch.main", "is_default_branch", "false"),
+					resource.TestCheckResourceAttr("secobserve_branch.next", "is_default_branch", "false"),
 				),
 			},
 		},
@@ -340,12 +392,20 @@ func TestAccProductDataSourceRequiresExactlyOneKey(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				// datasourcevalidator.ExactlyOneOf's diagnostic summary is
+				// "Missing Attribute Configuration" when nothing is set.
 				Config:      `data "secobserve_product" "test" {}`,
-				ExpectError: regexp.MustCompile(`Invalid Attribute Combination`),
+				ExpectError: regexp.MustCompile(`Missing Attribute Configuration`),
 			},
 			{
-				Config:      `data "secobserve_product" "test" { id = 1, name = "x" }`,
-				ExpectError: regexp.MustCompile(`Invalid Attribute Combination|Argument or block definition required`),
+				// ExactlyOneOf's summary when both are set is "Invalid
+				// Attribute Combination".
+				Config: `
+data "secobserve_product" "test" {
+  id   = 1
+  name = "x"
+}`,
+				ExpectError: regexp.MustCompile(`Invalid Attribute Combination`),
 			},
 		},
 	})

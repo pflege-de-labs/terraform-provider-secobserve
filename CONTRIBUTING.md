@@ -4,7 +4,9 @@
 
 A devcontainer is provided and is the least surprising way to work on this
 provider: it pins the Go and tool versions, joins the container to the
-acceptance-test network so the backend is reachable as `http://backend:8000`,
+acceptance-test network so the backend is reachable as `http://backend:5000`
+(gunicorn's real listen port; container-to-container traffic bypasses the
+host-side publish mapping),
 and pre-configures `dev_overrides` so the examples run against the locally
 built binary without `terraform init`.
 
@@ -29,6 +31,11 @@ make down                      # stop it and delete the volumes
 `make down` deletes the volumes on purpose. SecObserve performs its SPDX and
 ScanCode license import on first start, and the license tests depend on that
 state being pristine.
+
+Without Docker, `make container-up` runs the backend under Apple's `container`
+CLI against a PostgreSQL on the host. It needs one piece of host setup and has
+its own trade-offs; `test/apple-container.md` covers both. Compose stays the
+default and is what CI uses.
 
 For the OIDC tests, `make up-oidc` adds Keycloak with the realm vendored from
 upstream (realm `secobserve`, public client `secobserve`, user
