@@ -19,17 +19,28 @@ import (
 	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
 	authorizationgroupdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/authorization_group"
 	branchdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/branch"
+	licensedatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/license"
+	licensegroupdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/license_group"
+	licensepolicydatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/license_policy"
 	parserdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/parser"
 	periodictasksdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/periodic_tasks"
 	productdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/product"
 	productgroupdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/product_group"
 	servicedatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/service"
 	userdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/user"
+	vexcounterdatasource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/datasource/vex_counter"
 	apiconfigurationresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/api_configuration"
 	authorizationgroupresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/authorization_group"
 	authorizationgroupmemberresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/authorization_group_member"
 	branchresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/branch"
 	generalruleresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/general_rule"
+	licensegroupresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/license_group"
+	licensegroupauthorizationgroupmemberresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/license_group_authorization_group_member"
+	licensegroupmemberresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/license_group_member"
+	licensepolicyresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/license_policy"
+	licensepolicyauthorizationgroupmemberresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/license_policy_authorization_group_member"
+	licensepolicyitemresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/license_policy_item"
+	licensepolicymemberresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/license_policy_member"
 	productresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/product"
 	productapitokenresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/product_api_token"
 	productauthorizationgroupmemberresource "github.com/pflege-de-labs/terraform-provider-secobserve/internal/resource/product_authorization_group_member"
@@ -73,7 +84,8 @@ func (p *secObserveProvider) Metadata(_ context.Context, _ provider.MetadataRequ
 func (p *secObserveProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages configuration of a [SecObserve](https://github.com/SecObserve/SecObserve) instance: " +
-			"products, product groups, branches, services, memberships, rules, API import configurations and license policies.",
+			"products, product groups, branches, services, memberships, rules, API import configurations, " +
+			"license groups and license policies.",
 		Attributes: map[string]schema.Attribute{
 			"base_url": schema.StringAttribute{
 				Optional: true,
@@ -244,6 +256,13 @@ func (p *secObserveProvider) Resources(_ context.Context) []func() resource.Reso
 		generalruleresource.New,
 		productruleresource.New,
 		apiconfigurationresource.New,
+		licensegroupresource.New,
+		licensegroupmemberresource.New,
+		licensegroupauthorizationgroupmemberresource.New,
+		licensepolicyresource.New,
+		licensepolicyitemresource.New,
+		licensepolicymemberresource.New,
+		licensepolicyauthorizationgroupmemberresource.New,
 	}
 }
 
@@ -258,6 +277,10 @@ func (p *secObserveProvider) DataSources(_ context.Context) []func() datasource.
 		userdatasource.New,
 		authorizationgroupdatasource.New,
 		periodictasksdatasource.New,
+		licensedatasource.New,
+		licensegroupdatasource.New,
+		licensepolicydatasource.New,
+		vexcounterdatasource.New,
 	}
 }
 
