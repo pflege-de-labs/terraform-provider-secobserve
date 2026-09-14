@@ -1,6 +1,7 @@
-// Package schemacommon holds the attribute blocks that products and product
-// groups share. Each block pairs a schema contribution with the model struct
-// that resources embed by value, so the two halves cannot drift apart.
+// Package schemacommon holds the attribute blocks shared by more than one
+// resource -- products and product groups, and general rules and product
+// rules. Each block pairs a schema contribution with the model struct that
+// resources embed by value, so the two halves cannot drift apart.
 //
 // Embedding relies on the framework flattening value-embedded structs into the
 // object and addressing their promoted tfsdk fields as if declared directly.
