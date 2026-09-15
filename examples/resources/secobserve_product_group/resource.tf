@@ -2,15 +2,15 @@ resource "secobserve_product_group" "payments" {
   name        = "Payments"
   description = "Everything that moves money"
 
-  # Products in this group inherit these unless they set their own.
-  security_gate_active = true
-  security_gate = {
+  # Products in this group inherit these unless they set their own block.
+  # Omitting either block entirely means "inherit"; writing it (even empty)
+  # activates it -- add active = false inside to switch it off explicitly.
+  security_gate {
     threshold_critical = 1
     threshold_high     = 5
   }
 
-  repository_branch_housekeeping_active = true
-  repository_branch_housekeeping = {
+  repository_branch_housekeeping {
     keep_inactive_days = 60
     exempt_branches    = "^(main|release/.*)$"
   }

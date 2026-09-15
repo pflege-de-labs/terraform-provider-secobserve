@@ -4,7 +4,7 @@ page_title: "secobserve_product Resource - secobserve"
 subcategory: ""
 description: |-
   A product is the unit vulnerabilities and licenses are tracked against: a repository, a service, a container image, or whatever else you scan.
-  The attributes that model inheritance are tri-state. Leaving one unset means inherit from the product group, or failing that from the instance settings, which is not the same as setting it to false.
+  The security_gate and repository_branch_housekeeping blocks model inheritance. Omitting a block means inherit from the product group, or failing that from the instance settings, which is not the same as writing the block with active = false.
   ~> Deleting a product cascades to its branches, services, observations and API tokens.
   ~> Whoever creates a product becomes an Owner member of it automatically. Since Terraform creates products as the provider's own identity, that membership exists outside Terraform and a secobserve_product_member for the same user would fail as a duplicate.
 ---
@@ -13,7 +13,7 @@ description: |-
 
 A product is the unit vulnerabilities and licenses are tracked against: a repository, a service, a container image, or whatever else you scan.
 
-The attributes that model inheritance are tri-state. Leaving one unset means *inherit from the product group, or failing that from the instance settings*, which is not the same as setting it to `false`.
+The security_gate and repository_branch_housekeeping blocks model inheritance. Omitting a block means *inherit from the product group, or failing that from the instance settings*, which is not the same as writing the block with `active = false`.
 
 ~> Deleting a product **cascades** to its branches, services, observations and API tokens.
 
@@ -116,35 +116,25 @@ Note that `None` is a severity level in SecObserve, not the absence of one.
 - `propagate_branches_new_assessment` (Boolean) Propagate new assessments to the branches matched by `propagate_branches`.
 - `propagate_branches_new_observation` (Boolean) Propagate new observations to the branches matched by `propagate_branches`.
 - `purl` (String) Package URL identifying the product. Validated server-side.
-- `repository_branch_housekeeping` (Attributes) Branch housekeeping settings. Only meaningful while `repository_branch_housekeeping_active` is `true`; SecObserve clears both fields server-side otherwise, and this attribute is rejected at plan time if set alongside `repository_branch_housekeeping_active = false`.
+- `repository_branch_housekeeping` (Block, Optional) Branch housekeeping configuration. Omit this block entirely to inherit from the product group or, failing that, from the instance settings (which defaults to active). Writing the block -- even empty -- activates housekeeping; set `active = false` inside it to switch housekeeping off explicitly instead of inheriting.
+
+SecObserve clears both other fields server-side whenever housekeeping ends up inactive, so either is rejected at plan time if set alongside `active = false`.
 
 Leave a field unset to inherit the instance-wide default -- the default is not reflected back into this block, matching the rest of this provider's read-only/informational data being reserved for data sources.
 
-~> Unlike every other attribute in this provider, this block's state is echoed from your configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot recover configured settings (add them to your configuration afterwards to match what's actually configured), and changing a setting directly in SecObserve rather than through Terraform will not be detected as drift. (see [below for nested schema](#nestedatt--repository_branch_housekeeping))
-- `repository_branch_housekeeping_active` (Boolean) Whether inactive branches are deleted automatically.
-
-Tri-state: leave it unset to inherit from the product group or, failing that, from the instance settings (which defaults to `true`). That is different from `false`, which disables housekeeping explicitly.
-
-~> If this product belongs to a product group, an explicit `true`/`false` on the **product group** always wins over this attribute -- this product's own value only applies when the product group's is left unset. See `docs/design/api-quirks.md` for the source reference.
-
-Setting it to `false` also clears `repository_branch_housekeeping` server-side -- the block is rejected at plan time if set alongside `false`.
+~> Unlike every other attribute in this provider, this block's state is echoed from your configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot recover a configured housekeeping setup (add the block to your configuration afterwards to match what's actually configured), and changing it directly in SecObserve rather than through Terraform will not be detected as drift. (see [below for nested schema](#nestedblock--repository_branch_housekeeping))
 - `repository_prefix` (String) Base URL of the source repository, used to build links to source files.
 - `risk_acceptance_expiry_active` (Boolean) Whether accepted risks expire automatically.
 
 Tri-state: leave it unset to inherit from the product group or, failing that, from the instance settings. That is different from `false`, which disables expiry explicitly.
 - `risk_acceptance_expiry_days` (Number) Days before an accepted risk expires. `0` means accepted risks never expire. Leave it unset to inherit the instance-wide default.
-- `security_gate` (Attributes) Thresholds for the security gate. Only meaningful while `security_gate_active` is `true`; SecObserve clears every threshold server-side otherwise, and this attribute is rejected at plan time if set alongside `security_gate_active = false`.
+- `security_gate` (Block, Optional) Security gate configuration. Omit this block entirely to inherit from the product group or, failing that, from the instance settings (which defaults to active). Writing the block -- even empty -- activates the gate; set `active = false` inside it to switch the gate off explicitly instead of inheriting.
+
+SecObserve clears every threshold server-side whenever the gate ends up inactive, so a threshold is rejected at plan time if set alongside `active = false`.
 
 Leave a threshold unset to inherit the instance-wide default for that severity -- the default is not reflected back into this block, matching the rest of this provider's read-only/informational data being reserved for data sources.
 
-~> Unlike every other attribute in this provider, this block's state is echoed from your configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot recover configured thresholds (add them to your configuration afterwards to match what's actually configured), and changing a threshold directly in SecObserve rather than through Terraform will not be detected as drift. (see [below for nested schema](#nestedatt--security_gate))
-- `security_gate_active` (Boolean) Whether the security gate is evaluated.
-
-Tri-state: leave it unset to inherit from the product group or, failing that, from the instance settings (which defaults to `true`). That is different from `false`, which switches the gate off explicitly.
-
-~> If this product belongs to a product group, an explicit `true`/`false` on the **product group** always wins over this attribute -- this product's own value only applies when the product group's is left unset. See `docs/design/api-quirks.md` for the source reference.
-
-Setting it to `false` also clears every threshold in `security_gate` server-side -- the block is rejected at plan time if set alongside `false`.
+~> Unlike every other attribute in this provider, this block's state is echoed from your configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot recover a configured gate (add the block to your configuration afterwards to match what's actually configured), and changing it directly in SecObserve rather than through Terraform will not be detected as drift. (see [below for nested schema](#nestedblock--security_gate))
 - `vulnerablecode_enabled` (Boolean) Whether this product may be scanned against VulnerableCode.
 
 ### Read-Only
@@ -165,20 +155,26 @@ Required:
 - `propagate_to` (String) Regular expression matching the branch names to propagate to.
 
 
-<a id="nestedatt--repository_branch_housekeeping"></a>
+<a id="nestedblock--repository_branch_housekeeping"></a>
 ### Nested Schema for `repository_branch_housekeeping`
 
 Optional:
 
+- `active` (Boolean) Explicitly switches housekeeping off when set to `false`. Leave unset (or `true`) to activate housekeeping -- the block's mere presence already does that, this exists so the block can also express "explicitly off" without being removed.
+
+~> If this product belongs to a product group, an explicit `true`/`false` on the **product group** always wins over this one -- this product's own value only applies when the product group's is left unset. See `docs/design/api-quirks.md` for the source reference.
 - `exempt_branches` (String) Regular expression matching branch names that housekeeping must never delete.
 - `keep_inactive_days` (Number) Days a branch may stay inactive before housekeeping deletes it.
 
 
-<a id="nestedatt--security_gate"></a>
+<a id="nestedblock--security_gate"></a>
 ### Nested Schema for `security_gate`
 
 Optional:
 
+- `active` (Boolean) Explicitly switches the gate off when set to `false`. Leave unset (or `true`) to activate the gate -- the block's mere presence already does that, this exists so the block can also express "explicitly off" without being removed.
+
+~> If this product belongs to a product group, an explicit `true`/`false` on the **product group** always wins over this one -- this product's own value only applies when the product group's is left unset. See `docs/design/api-quirks.md` for the source reference.
 - `threshold_critical` (Number) Maximum number of active critical severity observations tolerated before the security gate fails.
 
 ~> A value of `0` is rejected. SecObserve treats it as "not set" and substitutes the instance-wide default whenever the gate is active, so it would never take effect. Use a large value such as `99999` to ignore a severity.

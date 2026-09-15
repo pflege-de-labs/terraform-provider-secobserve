@@ -36,22 +36,19 @@ for local development via `dev_overrides`.
 
 ### Things worth knowing
 
-- Attributes that model inheritance — `security_gate_active`,
-  `repository_branch_housekeeping_active`, `risk_acceptance_expiry_active` —
-  are tri-state. Leaving one unset inherits from the product group or the
-  instance settings (both default to `true`); setting it to `false` switches
-  the feature off explicitly. These are different, which is why the provider
-  uses terraform-plugin-framework rather than SDKv2. If a product belongs to
-  a product group, the group's explicit value always overrides the product's
-  own, not the other way round — see `docs/design/api-quirks.md`.
-- The dependent settings for each of those two gates live in a nested
-  `security_gate { threshold_critical = ... }` /
-  `repository_branch_housekeeping { keep_inactive_days = ... }` block instead
-  of flat attributes, so disabling the feature is one edit (delete the block,
-  set `*_active = false`) rather than three. A `security_gate` threshold of
-  `0` is rejected: SecObserve treats it as "not set" and substitutes its own
-  default, so the value would never take effect. Use a large number such as
-  `99999` to ignore a severity.
+- `security_gate` and `repository_branch_housekeeping` are real Terraform
+  blocks that model tri-state inheritance through block *presence*, not a
+  separate flag: omit the block entirely to inherit from the product group
+  or the instance settings (both default to active); write the block (even
+  empty) to activate the feature, with `active = false` inside as the
+  explicit way to switch it off instead. `risk_acceptance_expiry_active`
+  is a plain tri-state boolean attribute, unrelated to this pattern. If a
+  product belongs to a product group, the group's explicit block always
+  overrides the product's own, not the other way round — see
+  `docs/design/api-quirks.md`.
+- A `security_gate` threshold of `0` is rejected: SecObserve treats it as
+  "not set" and substitutes its own default, so the value would never take
+  effect. Use a large number such as `99999` to ignore a severity.
 - `issue_tracker_api_key` is stored in Terraform state. It cannot be
   write-only, because SecObserve's all-or-none rule over the issue tracker
   fields means every update has to resend it.

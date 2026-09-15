@@ -35,9 +35,7 @@ func (r *productGroupResource) Schema(_ context.Context, _ resource.SchemaReques
 		},
 	}
 
-	// Blocks shared with secobserve_product.
-	schemacommon.AddSecurityGate(attributes)
-	schemacommon.AddBranchHousekeeping(attributes)
+	// Attribute blocks shared with secobserve_product.
 	schemacommon.AddNotifications(attributes)
 	schemacommon.AddApprovals(attributes)
 	schemacommon.AddApprovers(attributes, "product group")
@@ -45,19 +43,30 @@ func (r *productGroupResource) Schema(_ context.Context, _ resource.SchemaReques
 	schemacommon.AddLicensePolicy(attributes)
 	schemacommon.AddBranchPropagation(attributes)
 
+	// Real Terraform blocks (not nested attributes), also shared with
+	// secobserve_product: `active` lives inside each, so block absence
+	// means inherit and a present block means active.
+	blocks := map[string]schema.Block{}
+	schemacommon.AddSecurityGate(blocks)
+	schemacommon.AddBranchHousekeeping(blocks)
+
 	resp.Schema = schema.Schema{
-		// v0 -> v1: security_gate_threshold_* and
-		// repository_branch_housekeeping_{keep_inactive_days,exempt_branches}
-		// moved into the nested security_gate/repository_branch_housekeeping
-		// objects. See UpgradeState.
-		Version: 1,
+		// v0 -> v1: security_gate_threshold_*/repository_branch_housekeeping_
+		// {keep_inactive_days,exempt_branches} moved into nested attributes,
+		// security_gate_active/repository_branch_housekeeping_active stayed
+		// top-level. v1 -> v2: those two moved inside real
+		// security_gate/repository_branch_housekeeping blocks as `active`.
+		// See UpgradeState.
+		Version: 2,
 		MarkdownDescription: "A product group bundles related products and supplies the defaults they inherit: " +
 			"security gate thresholds, branch housekeeping, notification targets, approval requirements and the " +
 			"license policy.\n\n" +
-			"The attributes that model inheritance are tri-state. Leaving one unset means *inherit from the " +
-			"instance settings*, which is not the same as setting it to `false`.\n\n" +
+			"The security_gate and repository_branch_housekeeping blocks model inheritance. Omitting a block " +
+			"means *inherit from the instance settings*, which is not the same as writing the block with " +
+			"`active = false`.\n\n" +
 			"~> Deleting a product group **cascades to every product in it**, together with their branches, " +
 			"services and observations.",
 		Attributes: attributes,
+		Blocks:     blocks,
 	}
 }

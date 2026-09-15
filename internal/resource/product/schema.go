@@ -104,9 +104,7 @@ func (r *productResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 		},
 	}
 
-	// Blocks shared with secobserve_product_group.
-	schemacommon.AddSecurityGate(attributes)
-	schemacommon.AddBranchHousekeeping(attributes)
+	// Attribute blocks shared with secobserve_product_group.
 	schemacommon.AddNotifications(attributes)
 	schemacommon.AddApprovals(attributes)
 	schemacommon.AddApprovers(attributes, "product or its product group")
@@ -118,21 +116,31 @@ func (r *productResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	addIssueTracker(attributes)
 	addScanners(attributes)
 
+	// Real Terraform blocks (not nested attributes), also shared with
+	// secobserve_product_group: `active` lives inside each, so block
+	// absence means inherit and a present block means active.
+	blocks := map[string]schema.Block{}
+	schemacommon.AddSecurityGate(blocks)
+	schemacommon.AddBranchHousekeeping(blocks)
+
 	resp.Schema = schema.Schema{
-		// v0 -> v1: security_gate_threshold_* and
-		// repository_branch_housekeeping_{keep_inactive_days,exempt_branches}
-		// moved into the nested security_gate/repository_branch_housekeeping
-		// objects. See UpgradeState.
-		Version: 1,
+		// v0 -> v1: security_gate_threshold_*/repository_branch_housekeeping_
+		// {keep_inactive_days,exempt_branches} moved into nested attributes,
+		// security_gate_active/repository_branch_housekeeping_active stayed
+		// top-level. v1 -> v2: those two moved inside real
+		// security_gate/repository_branch_housekeeping blocks as `active`.
+		// See UpgradeState.
+		Version: 2,
 		MarkdownDescription: "A product is the unit vulnerabilities and licenses are tracked against: a " +
 			"repository, a service, a container image, or whatever else you scan.\n\n" +
-			"The attributes that model inheritance are tri-state. Leaving one unset means *inherit from the " +
-			"product group, or failing that from the instance settings*, which is not the same as setting it " +
-			"to `false`.\n\n" +
+			"The security_gate and repository_branch_housekeeping blocks model inheritance. Omitting a block " +
+			"means *inherit from the product group, or failing that from the instance settings*, which is not " +
+			"the same as writing the block with `active = false`.\n\n" +
 			"~> Deleting a product **cascades** to its branches, services, observations and API tokens.\n\n" +
 			"~> Whoever creates a product becomes an `Owner` member of it automatically. Since Terraform " +
 			"creates products as the provider's own identity, that membership exists outside Terraform and a " +
 			"`secobserve_product_member` for the same user would fail as a duplicate.",
 		Attributes: attributes,
+		Blocks:     blocks,
 	}
 }

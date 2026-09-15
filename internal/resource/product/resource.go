@@ -61,8 +61,8 @@ func (r *productResource) Create(ctx context.Context, req resource.CreateRequest
 	// security_gate/repository_branch_housekeeping carry no server-filled
 	// values; state is echoed from the plan, not the response -- see the
 	// package doc comment on schemacommon's plan_modifiers.go.
-	state.SecurityGate.Thresholds = plan.SecurityGate.Thresholds
-	state.BranchHousekeeping.Settings = plan.BranchHousekeeping.Settings
+	state.SecurityGate.Block = plan.SecurityGate.Block
+	state.BranchHousekeeping.Block = plan.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -86,8 +86,8 @@ func (r *productResource) Read(ctx context.Context, req resource.ReadRequest, re
 	var refreshed model
 	refreshed.fromAPI(ctx, product, &resp.Diagnostics)
 	// Carried forward from prior state, not the response -- see Create.
-	refreshed.SecurityGate.Thresholds = state.SecurityGate.Thresholds
-	refreshed.BranchHousekeeping.Settings = state.BranchHousekeeping.Settings
+	refreshed.SecurityGate.Block = state.SecurityGate.Block
+	refreshed.BranchHousekeeping.Block = state.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
 }
 
@@ -118,8 +118,8 @@ func (r *productResource) Update(ctx context.Context, req resource.UpdateRequest
 	var refreshed model
 	refreshed.fromAPI(ctx, updated, &resp.Diagnostics)
 	// Carried forward from the plan, not the response -- see Create.
-	refreshed.SecurityGate.Thresholds = plan.SecurityGate.Thresholds
-	refreshed.BranchHousekeeping.Settings = plan.BranchHousekeeping.Settings
+	refreshed.SecurityGate.Block = plan.SecurityGate.Block
+	refreshed.BranchHousekeeping.Block = plan.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
 }
 
