@@ -5,6 +5,7 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -86,9 +87,9 @@ func (r *generalRuleResource) ValidateConfig(
 	config.RuleFields.ValidateRuleFields(&resp.Diagnostics)
 }
 
-func (m *model) fromAPI(rule client.Rule) {
+func (m *model) fromAPI(ctx context.Context, rule client.Rule, diags *diag.Diagnostics) {
 	m.ID = types.Int64Value(rule.ID)
-	m.RuleFields.FromAPI(rule.RuleFields)
+	m.RuleFields.FromAPI(ctx, rule.RuleFields, diags)
 	m.RuleApproval.FromAPI(rule)
 }
 
@@ -99,14 +100,14 @@ func (r *generalRuleResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	created, err := r.client.CreateGeneralRule(ctx, plan.RuleFields.ToAPI())
+	created, err := r.client.CreateGeneralRule(ctx, plan.RuleFields.ToAPI(ctx, &resp.Diagnostics))
 	if err != nil {
 		resp.Diagnostics.AddError("Could not create SecObserve general rule", err.Error())
 		return
 	}
 
 	var state model
-	state.fromAPI(created)
+	state.fromAPI(ctx, created, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -128,7 +129,7 @@ func (r *generalRuleResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var refreshed model
-	refreshed.fromAPI(rule)
+	refreshed.fromAPI(ctx, rule, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
 }
 
@@ -145,14 +146,14 @@ func (r *generalRuleResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	updated, err := r.client.UpdateGeneralRule(ctx, state.ID.ValueInt64(), plan.RuleFields.ToAPI())
+	updated, err := r.client.UpdateGeneralRule(ctx, state.ID.ValueInt64(), plan.RuleFields.ToAPI(ctx, &resp.Diagnostics))
 	if err != nil {
 		resp.Diagnostics.AddError("Could not update SecObserve general rule", err.Error())
 		return
 	}
 
 	var refreshed model
-	refreshed.fromAPI(updated)
+	refreshed.fromAPI(ctx, updated, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
 }
 

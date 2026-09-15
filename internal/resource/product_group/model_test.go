@@ -29,9 +29,12 @@ func TestModelMatchesSchema(t *testing.T) {
 		types.StringType, []attr.Value{types.StringValue("Open")})
 	before.AssessmentApprovers = types.SetValueMust(types.Int64Type, []attr.Value{types.Int64Value(7)})
 	before.AssessmentApproverAuthorizationGroups = types.SetValueMust(types.Int64Type, nil)
-	before.PropagateBranches = []schemacommon.PropagateBranchModel{
-		{PropagateTo: types.StringValue("^main$")},
-	}
+	before.PropagateBranches = types.ListValueMust(schemacommon.PropagateBranchObjectType, []attr.Value{
+		types.ObjectValueMust(
+			schemacommon.PropagateBranchObjectType.AttrTypes,
+			map[string]attr.Value{"propagate_to": types.StringValue("^main$")},
+		),
+	})
 
 	after := tftest.RoundTrip(t, New(), before)
 

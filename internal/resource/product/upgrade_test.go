@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
 	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/schemacommon"
 )
 
 // testSettingsClient stubs GET /api/settings/1/ with the given defaults, for
@@ -57,6 +58,7 @@ func newModelV0(id int64, name string) modelV0 {
 	m.AssessmentApprovers = types.SetNull(types.Int64Type)
 	m.AssessmentApproverAuthorizationGroups = types.SetNull(types.Int64Type)
 	m.ObservationNotificationStatusList = types.SetNull(types.StringType)
+	m.PropagateBranches = types.ListNull(schemacommon.PropagateBranchObjectType)
 	return m
 }
 
@@ -221,6 +223,7 @@ func newModelV1(id int64, name string) modelV1 {
 	m.AssessmentApprovers = types.SetNull(types.Int64Type)
 	m.AssessmentApproverAuthorizationGroups = types.SetNull(types.Int64Type)
 	m.ObservationNotificationStatusList = types.SetNull(types.StringType)
+	m.PropagateBranches = types.ListNull(schemacommon.PropagateBranchObjectType)
 	return m
 }
 
