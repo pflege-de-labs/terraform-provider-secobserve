@@ -123,6 +123,93 @@ resource "secobserve_product" "test" {
 	})
 }
 
+// An explicit threshold alongside security_gate_active = false is likewise
+// unrepresentable: SecObserve force-clears every threshold whenever the gate
+// is off, so an explicit value here would produce the same "provider produced
+// inconsistent result" apply failure as the 0 case above.
+func TestProductThresholdRejectedWhileGateInactive(t *testing.T) {
+	newStubSecObserve(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "secobserve_product" "test" {
+  name                           = "inactive-threshold"
+  security_gate_active           = false
+  security_gate_threshold_medium = 7
+}`,
+				ExpectError: regexp.MustCompile(`Cannot be set while the security gate is inactive`),
+			},
+		},
+	})
+}
+
+// Same failure mode for branch housekeeping: an explicit
+// keep_inactive_days or exempt_branches alongside
+// repository_branch_housekeeping_active = false is rejected at plan time
+// instead of crashing the apply. This is the exact combination reported
+// against a live product_group: keep_inactive_days and exempt_branches were
+// left over in config from before housekeeping was disabled.
+func TestProductHousekeepingFieldsRejectedWhileInactive(t *testing.T) {
+	newStubSecObserve(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "secobserve_product" "test" {
+  name                                             = "inactive-housekeeping"
+  repository_branch_housekeeping_active            = false
+  repository_branch_housekeeping_keep_inactive_days = 60
+  repository_branch_housekeeping_exempt_branches   = "^(main|release/.*)$"
+}`,
+				ExpectError: regexp.MustCompile(`Cannot be set while housekeeping is inactive`),
+			},
+		},
+	})
+}
+
+// Flipping housekeeping while exempt_branches is never configured is what the
+// sibling-aware plan modifier exists for: without it, the framework carries
+// the prior state value into the plan and Terraform rejects the server's
+// recomputed "" as an inconsistent result -- the bug reported against a live
+// product_group.
+func TestProductHousekeepingFlipWithUnsetExemptBranches(t *testing.T) {
+	newStubSecObserve(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "secobserve_product" "test" {
+  name                                             = "housekeeping-flip"
+  repository_branch_housekeeping_active            = true
+  repository_branch_housekeeping_exempt_branches   = "^(main|release/.*)$"
+}`,
+				Check: resource.TestCheckResourceAttr(
+					"secobserve_product.test", "repository_branch_housekeeping_exempt_branches",
+					"^(main|release/.*)$"),
+			},
+			{
+				Config: `
+resource "secobserve_product" "test" {
+  name                                   = "housekeeping-flip"
+  repository_branch_housekeeping_active = false
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.TestCheckResourceAttr(
+					"secobserve_product.test", "repository_branch_housekeeping_exempt_branches", ""),
+			},
+		},
+	})
+}
+
 // Flipping the gate while the thresholds are never configured is what the
 // sibling-aware plan modifier exists for: the framework would otherwise carry
 // the prior state values into the plan and Terraform would reject the server's
