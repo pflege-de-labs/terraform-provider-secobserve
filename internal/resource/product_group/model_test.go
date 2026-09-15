@@ -22,7 +22,7 @@ func TestModelMatchesSchema(t *testing.T) {
 		Description: types.StringValue("a group"),
 	}
 	before.SecurityGateActive = types.BoolValue(true)
-	before.SecurityGateThresholdCritical = types.Int64Value(3)
+	before.SecurityGate.Thresholds = &schemacommon.SecurityGateThresholds{Critical: types.Int64Value(3)}
 	before.ObservationNotificationStatusList = types.SetValueMust(
 		types.StringType, []attr.Value{types.StringValue("Open")})
 	before.AssessmentApprovers = types.SetValueMust(types.Int64Type, []attr.Value{types.Int64Value(7)})

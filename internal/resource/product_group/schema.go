@@ -46,6 +46,11 @@ func (r *productGroupResource) Schema(_ context.Context, _ resource.SchemaReques
 	schemacommon.AddBranchPropagation(attributes)
 
 	resp.Schema = schema.Schema{
+		// v0 -> v1: security_gate_threshold_* and
+		// repository_branch_housekeeping_{keep_inactive_days,exempt_branches}
+		// moved into the nested security_gate/repository_branch_housekeeping
+		// objects. See UpgradeState.
+		Version: 1,
 		MarkdownDescription: "A product group bundles related products and supplies the defaults they inherit: " +
 			"security gate thresholds, branch housekeeping, notification targets, approval requirements and the " +
 			"license policy.\n\n" +

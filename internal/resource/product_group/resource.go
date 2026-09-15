@@ -16,6 +16,7 @@ var (
 	_ resource.ResourceWithConfigure      = (*productGroupResource)(nil)
 	_ resource.ResourceWithImportState    = (*productGroupResource)(nil)
 	_ resource.ResourceWithValidateConfig = (*productGroupResource)(nil)
+	_ resource.ResourceWithUpgradeState   = (*productGroupResource)(nil)
 )
 
 // New returns the secobserve_product_group resource.
@@ -74,6 +75,11 @@ func (r *productGroupResource) Create(
 
 	var state model
 	state.fromAPI(ctx, created, &resp.Diagnostics)
+	// security_gate/repository_branch_housekeeping carry no server-filled
+	// values; state is echoed from the plan, not the response -- see the
+	// package doc comment on schemacommon's plan_modifiers.go.
+	state.SecurityGate.Thresholds = plan.SecurityGate.Thresholds
+	state.BranchHousekeeping.Settings = plan.BranchHousekeeping.Settings
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -96,6 +102,9 @@ func (r *productGroupResource) Read(ctx context.Context, req resource.ReadReques
 
 	var refreshed model
 	refreshed.fromAPI(ctx, group, &resp.Diagnostics)
+	// Carried forward from prior state, not the response -- see Create.
+	refreshed.SecurityGate.Thresholds = state.SecurityGate.Thresholds
+	refreshed.BranchHousekeeping.Settings = state.BranchHousekeeping.Settings
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
 }
 
@@ -127,6 +136,9 @@ func (r *productGroupResource) Update(
 
 	var refreshed model
 	refreshed.fromAPI(ctx, updated, &resp.Diagnostics)
+	// Carried forward from the plan, not the response -- see Create.
+	refreshed.SecurityGate.Thresholds = plan.SecurityGate.Thresholds
+	refreshed.BranchHousekeeping.Settings = plan.BranchHousekeeping.Settings
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
 }
 

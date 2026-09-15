@@ -6,8 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -19,9 +17,17 @@ import (
 // BranchHousekeeping is the branch housekeeping block of a product or product
 // group.
 type BranchHousekeeping struct {
-	RepositoryBranchHousekeepingActive           types.Bool   `tfsdk:"repository_branch_housekeeping_active"`
-	RepositoryBranchHousekeepingKeepInactiveDays types.Int64  `tfsdk:"repository_branch_housekeeping_keep_inactive_days"`
-	RepositoryBranchHousekeepingExemptBranches   types.String `tfsdk:"repository_branch_housekeeping_exempt_branches"`
+	RepositoryBranchHousekeepingActive types.Bool                  `tfsdk:"repository_branch_housekeeping_active"`
+	Settings                           *BranchHousekeepingSettings `tfsdk:"repository_branch_housekeeping"`
+}
+
+// BranchHousekeepingSettings is the nested repository_branch_housekeeping
+// object. Like SecurityGateThresholds, it carries no server-filled values:
+// state is built from the plan, never from the API response -- see the
+// package doc comment on plan_modifiers.go.
+type BranchHousekeepingSettings struct {
+	KeepInactiveDays types.Int64  `tfsdk:"keep_inactive_days"`
+	ExemptBranches   types.String `tfsdk:"exempt_branches"`
 }
 
 // AddBranchHousekeeping contributes the branch housekeeping attributes.
@@ -30,53 +36,71 @@ func AddBranchHousekeeping(attributes map[string]schema.Attribute) {
 		Optional: true,
 		MarkdownDescription: "Whether inactive branches are deleted automatically.\n\n" +
 			"Tri-state: leave it unset to inherit from the product group or, failing that, from the instance " +
-			"settings. That is different from `false`, which disables housekeeping explicitly.\n\n" +
-			"Setting it to `false` also clears `repository_branch_housekeeping_keep_inactive_days` and " +
-			"`repository_branch_housekeeping_exempt_branches` server-side -- both are rejected at plan time " +
-			"if set explicitly alongside `false`.",
+			"settings (which defaults to `true`). That is different from `false`, which disables housekeeping " +
+			"explicitly.\n\n" +
+			"~> If this product belongs to a product group, an explicit `true`/`false` on the **product group** " +
+			"always wins over this attribute -- this product's own value only applies when the product group's " +
+			"is left unset. See `docs/design/api-quirks.md` for the source reference.\n\n" +
+			"Setting it to `false` also clears `repository_branch_housekeeping` server-side -- the block is " +
+			"rejected at plan time if set alongside `false`.",
 	}
-	attributes["repository_branch_housekeeping_keep_inactive_days"] = schema.Int64Attribute{
-		Optional:      true,
-		Computed:      true,
-		Validators:    []validator.Int64{int64validator.Between(1, 999999)},
-		PlanModifiers: []planmodifier.Int64{Int64UnknownWhenBoolSiblingChanges("repository_branch_housekeeping_active")},
-		MarkdownDescription: "Days a branch may stay inactive before housekeeping deletes it. Leave it unset " +
-			"to inherit the instance-wide default.\n\n" +
-			"~> Cannot be set while `repository_branch_housekeeping_active` is explicitly `false`.",
-	}
-	attributes["repository_branch_housekeeping_exempt_branches"] = schema.StringAttribute{
-		Optional:      true,
-		Computed:      true,
-		Default:       stringdefault.StaticString(""),
-		PlanModifiers: []planmodifier.String{StringUnknownWhenBoolSiblingChanges("repository_branch_housekeeping_active")},
-		Validators: []validator.String{
-			stringvalidator.LengthAtMost(255),
-			sovalidators.RegularExpression(),
+	attributes["repository_branch_housekeeping"] = schema.SingleNestedAttribute{
+		Optional: true,
+		Attributes: map[string]schema.Attribute{
+			"keep_inactive_days": schema.Int64Attribute{
+				Optional:            true,
+				Validators:          []validator.Int64{int64validator.Between(1, 999999)},
+				MarkdownDescription: "Days a branch may stay inactive before housekeeping deletes it.",
+			},
+			"exempt_branches": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(255),
+					sovalidators.RegularExpression(),
+				},
+				MarkdownDescription: "Regular expression matching branch names that housekeeping must never delete.",
+			},
 		},
-		MarkdownDescription: "Regular expression matching branch names that housekeeping must never delete.\n\n" +
-			"~> Cannot be set while `repository_branch_housekeeping_active` is explicitly `false`.",
+		MarkdownDescription: "Branch housekeeping settings. Only meaningful while " +
+			"`repository_branch_housekeeping_active` is `true`; SecObserve clears both fields server-side " +
+			"otherwise, and this attribute is rejected at plan time if set alongside " +
+			"`repository_branch_housekeeping_active = false`.\n\n" +
+			"Leave a field unset to inherit the instance-wide default -- the default is not reflected back " +
+			"into this block, matching the rest of this provider's read-only/informational data being " +
+			"reserved for data sources.\n\n" +
+			"~> Unlike every other attribute in this provider, this block's state is echoed from your " +
+			"configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot " +
+			"recover configured settings (add them to your configuration afterwards to match what's actually " +
+			"configured), and changing a setting directly in SecObserve rather than through Terraform will not " +
+			"be detected as drift.",
 	}
 }
 
 // ToAPI converts the block into its request representation.
 func (b BranchHousekeeping) ToAPI() client.BranchHousekeepingFields {
-	return client.BranchHousekeepingFields{
-		RepositoryBranchHousekeepingActive:           tfutil.BoolPtr(b.RepositoryBranchHousekeepingActive),
-		RepositoryBranchHousekeepingKeepInactiveDays: tfutil.Int64Ptr(b.RepositoryBranchHousekeepingKeepInactiveDays),
-		RepositoryBranchHousekeepingExemptBranches:   tfutil.StringValue(b.RepositoryBranchHousekeepingExemptBranches),
+	fields := client.BranchHousekeepingFields{
+		RepositoryBranchHousekeepingActive: tfutil.BoolPtr(b.RepositoryBranchHousekeepingActive),
 	}
+	if b.Settings != nil {
+		fields.RepositoryBranchHousekeepingKeepInactiveDays = tfutil.Int64Ptr(b.Settings.KeepInactiveDays)
+		fields.RepositoryBranchHousekeepingExemptBranches = tfutil.StringValue(b.Settings.ExemptBranches)
+	}
+	return fields
 }
 
 // FromAPI fills the block from an API response.
+//
+// Deliberately does NOT populate Settings: unlike the rest of this provider,
+// repository_branch_housekeeping's state is carried forward from the
+// plan/prior state by the resource's Create/Read/Update, not read back from
+// the response. See the package doc comment on plan_modifiers.go.
 func (b *BranchHousekeeping) FromAPI(fields client.BranchHousekeepingFields) {
 	b.RepositoryBranchHousekeepingActive = tfutil.Bool(fields.RepositoryBranchHousekeepingActive)
-	b.RepositoryBranchHousekeepingKeepInactiveDays = tfutil.Int64(fields.RepositoryBranchHousekeepingKeepInactiveDays)
-	b.RepositoryBranchHousekeepingExemptBranches = types.StringValue(fields.RepositoryBranchHousekeepingExemptBranches)
 }
 
-// ValidateBranchHousekeeping rejects an explicit keep_inactive_days or
-// exempt_branches value combined with repository_branch_housekeeping_active
-// explicitly set to false.
+// ValidateBranchHousekeeping rejects a repository_branch_housekeeping block
+// combined with repository_branch_housekeeping_active explicitly set to
+// false, and warns when the block is set but active is left unset.
 //
 // SecObserve force-clears both fields server-side whenever active is false
 // (core/api/serializers_product.py:112-120), regardless of what was
@@ -85,30 +109,34 @@ func (b *BranchHousekeeping) FromAPI(fields client.BranchHousekeepingFields) {
 // here would fail the apply with "provider produced inconsistent result".
 // Rejecting the combination at plan time is both earlier and explicable.
 func (b BranchHousekeeping) ValidateBranchHousekeeping(diags *diag.Diagnostics) {
-	active := b.RepositoryBranchHousekeepingActive
-	if active.IsUnknown() || active.IsNull() || active.ValueBool() {
-		// Only an explicit, known false triggers SecObserve's unconditional
-		// clear; null (inherit) and true leave both fields alone.
+	if b.Settings == nil {
 		return
 	}
 
-	if !b.RepositoryBranchHousekeepingKeepInactiveDays.IsNull() && !b.RepositoryBranchHousekeepingKeepInactiveDays.IsUnknown() {
-		diags.AddAttributeError(
-			path.Root("repository_branch_housekeeping_keep_inactive_days"),
-			"Cannot be set while housekeeping is inactive",
-			"SecObserve clears repository_branch_housekeeping_keep_inactive_days server-side whenever "+
-				"repository_branch_housekeeping_active is false, regardless of what is configured here.\n\n"+
-				"Remove this attribute, or set repository_branch_housekeeping_active to true or leave it unset.",
-		)
+	active := b.RepositoryBranchHousekeepingActive
+	if active.IsUnknown() {
+		return
 	}
 
-	if value := b.RepositoryBranchHousekeepingExemptBranches; !value.IsNull() && !value.IsUnknown() && value.ValueString() != "" {
+	if !active.IsNull() && !active.ValueBool() {
 		diags.AddAttributeError(
-			path.Root("repository_branch_housekeeping_exempt_branches"),
+			path.Root("repository_branch_housekeeping"),
 			"Cannot be set while housekeeping is inactive",
-			"SecObserve clears repository_branch_housekeeping_exempt_branches server-side whenever "+
+			"SecObserve clears repository_branch_housekeeping server-side whenever "+
 				"repository_branch_housekeeping_active is false, regardless of what is configured here.\n\n"+
-				"Remove this attribute, or set repository_branch_housekeeping_active to true or leave it unset.",
+				"Remove this block, or set repository_branch_housekeeping_active to true.",
+		)
+		return
+	}
+
+	if active.IsNull() {
+		diags.AddAttributeWarning(
+			path.Root("repository_branch_housekeeping"),
+			"Ignored unless repository_branch_housekeeping_active is true",
+			"repository_branch_housekeeping_active is unset here, so SecObserve never consults these "+
+				"settings on this resource -- whatever ends up active comes from the product group or the "+
+				"instance-wide default instead, using their own settings. Set "+
+				"repository_branch_housekeeping_active = true to make this resource's settings apply.",
 		)
 	}
 }

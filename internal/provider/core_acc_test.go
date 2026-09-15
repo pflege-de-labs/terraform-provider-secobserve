@@ -28,7 +28,9 @@ resource "secobserve_product_group" "test" {
   name                                  = %q
   description                           = "created by an acceptance test"
   security_gate_active                  = true
-  security_gate_threshold_critical      = 1
+  security_gate = {
+    threshold_critical = 1
+  }
   observation_notification_min_severity = "High"
   observation_notification_status_list  = ["Open", "Affected"]
 }`, name),
@@ -37,7 +39,7 @@ resource "secobserve_product_group" "test" {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("secobserve_product_group.test", "name", name),
-					resource.TestCheckResourceAttr("secobserve_product_group.test", "security_gate_threshold_critical", "1"),
+					resource.TestCheckResourceAttr("secobserve_product_group.test", "security_gate.threshold_critical", "1"),
 					resource.TestCheckResourceAttrSet("secobserve_product_group.test", "id"),
 				),
 			},
@@ -91,16 +93,18 @@ resource "secobserve_product" "test" {
 			{
 				Config: fmt.Sprintf(`
 resource "secobserve_product" "test" {
-  name                             = %q
-  security_gate_active             = true
-  security_gate_threshold_critical = 2
-  propagate_branches               = [{ propagate_to = "^release/.*$" }]
+  name                  = %q
+  security_gate_active  = true
+  security_gate = {
+    threshold_critical = 2
+  }
+  propagate_branches = [{ propagate_to = "^release/.*$" }]
 }`, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("secobserve_product.test", "security_gate_threshold_critical", "2"),
+					resource.TestCheckResourceAttr("secobserve_product.test", "security_gate.threshold_critical", "2"),
 					resource.TestCheckResourceAttr("secobserve_product.test", "propagate_branches.0.propagate_to", "^release/.*$"),
 				),
 			},
@@ -109,6 +113,13 @@ resource "secobserve_product" "test" {
 				ImportState:       true,
 				ImportStateId:     name,
 				ImportStateVerify: true,
+				// security_gate/repository_branch_housekeeping are echoed
+				// from config/prior state, never read back from the API
+				// response (see schemacommon's plan_modifiers.go doc
+				// comment) -- import has neither, so it cannot recover a
+				// configured threshold. Matches the product_api_token
+				// secret precedent below.
+				ImportStateVerifyIgnore: []string{"security_gate.%", "security_gate.threshold_critical"},
 			},
 		},
 	})
