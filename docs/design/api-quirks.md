@@ -168,6 +168,27 @@ tests in `internal/provider/product_stub_test.go`:
    gaps only matter for out-of-band changes, which are the less common path
    for a Terraform-managed resource.
 
+4. **The schema-version-0 state upgrader (the one path where these fields
+   really were `Optional + Computed`, and so really can contain a value
+   nobody configured) fetches the current instance-wide defaults and drops
+   any threshold/housekeeping value that matches one**, rather than
+   blindly carrying everything forward. Reported: an existing product/group
+   with server-filled values tracked from before this redesign showed a
+   plan clearing `active` and four thresholds on the first apply after
+   upgrading — read as the gate/housekeeping being disabled, even though
+   nothing was actually lost server-side. A value equal to the current
+   default produces the identical wire request whether the upgrader keeps
+   it or drops it (SecObserve fills the same default either way), so
+   dropping it can never lose real configuration; at worst a value that
+   coincidentally equals the default gets dropped and reappears as a
+   one-line diff on the next apply if the practitioner's `.tf` still has
+   it. `dropIfDefaultInt64`/`dropIfDefaultString` in each resource's
+   `upgrade.go` implement this. **Not needed for the v1 -> v2 upgrader**:
+   the shipped v1 schema already made these fields plain
+   `Optional`, so v1 state can never contain a value the practitioner
+   didn't configure — only a genuine schema-version-0 state (or a v0 -> v2
+   upgrade) can have the ambiguity this guards against.
+
 ### Inheritance chain for the security gate and branch housekeeping
 
 Not previously documented anywhere in this repo, and surprising enough to be
