@@ -119,6 +119,11 @@ func (r *productResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	addScanners(attributes)
 
 	resp.Schema = schema.Schema{
+		// v0 -> v1: security_gate_threshold_* and
+		// repository_branch_housekeeping_{keep_inactive_days,exempt_branches}
+		// moved into the nested security_gate/repository_branch_housekeeping
+		// objects. See UpgradeState.
+		Version: 1,
 		MarkdownDescription: "A product is the unit vulnerabilities and licenses are tracked against: a " +
 			"repository, a service, a container image, or whatever else you scan.\n\n" +
 			"The attributes that model inheritance are tri-state. Leaving one unset means *inherit from the " +
