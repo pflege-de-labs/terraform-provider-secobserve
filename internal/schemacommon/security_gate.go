@@ -14,18 +14,23 @@ import (
 	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/tfutil"
 )
 
-// SecurityGate is the security gate block of a product or product group.
+// SecurityGate is the security_gate block of a product or product group.
 type SecurityGate struct {
-	SecurityGateActive types.Bool              `tfsdk:"security_gate_active"`
-	Thresholds         *SecurityGateThresholds `tfsdk:"security_gate"`
+	Block *SecurityGateBlock `tfsdk:"security_gate"`
 }
 
-// SecurityGateThresholds is the nested security_gate object. It deliberately
-// carries no server-filled values: state is built from the plan, never from
-// the API response -- see the package doc comment on plan_modifiers.go for
-// why, and ValidateSecurityGate below for what SecObserve does when
-// security_gate_active is false.
-type SecurityGateThresholds struct {
+// SecurityGateBlock is the nested security_gate block. Absent entirely means
+// inherit from the product group or the instance settings (tri-state); a
+// present block with no `active` means active -- setting any threshold
+// implies activating the gate. `active = false` inside the block is the
+// explicit way to switch it off.
+//
+// The block deliberately carries no server-filled values: state is built
+// from the plan, never from the API response -- see the package doc comment
+// on plan_modifiers.go for why, and ValidateSecurityGate below for what
+// SecObserve does when the gate is inactive.
+type SecurityGateBlock struct {
+	Active   types.Bool  `tfsdk:"active"`
 	Critical types.Int64 `tfsdk:"threshold_critical"`
 	High     types.Int64 `tfsdk:"threshold_high"`
 	Medium   types.Int64 `tfsdk:"threshold_medium"`
@@ -53,22 +58,19 @@ var thresholdSeverities = []struct {
 	{"threshold_unknown", "unknown severity"},
 }
 
-// AddSecurityGate contributes the security gate attributes.
-func AddSecurityGate(attributes map[string]schema.Attribute) {
-	attributes["security_gate_active"] = schema.BoolAttribute{
-		Optional: true,
-		MarkdownDescription: "Whether the security gate is evaluated.\n\n" +
-			"Tri-state: leave it unset to inherit from the product group or, failing that, from the instance " +
-			"settings (which defaults to `true`). That is different from `false`, which switches the gate off " +
-			"explicitly.\n\n" +
-			"~> If this product belongs to a product group, an explicit `true`/`false` on the **product group** " +
-			"always wins over this attribute -- this product's own value only applies when the product group's " +
-			"is left unset. See `docs/design/api-quirks.md` for the source reference.\n\n" +
-			"Setting it to `false` also clears every threshold in `security_gate` server-side -- the block is " +
-			"rejected at plan time if set alongside `false`.",
+// AddSecurityGate contributes the security_gate block.
+func AddSecurityGate(blocks map[string]schema.Block) {
+	thresholdAttributes := map[string]schema.Attribute{
+		"active": schema.BoolAttribute{
+			Optional: true,
+			MarkdownDescription: "Explicitly switches the gate off when set to `false`. Leave unset (or " +
+				"`true`) to activate the gate -- the block's mere presence already does that, this exists so " +
+				"the block can also express \"explicitly off\" without being removed.\n\n" +
+				"~> If this product belongs to a product group, an explicit `true`/`false` on the **product " +
+				"group** always wins over this one -- this product's own value only applies when the product " +
+				"group's is left unset. See `docs/design/api-quirks.md` for the source reference.",
+		},
 	}
-
-	thresholdAttributes := map[string]schema.Attribute{}
 	for _, threshold := range thresholdSeverities {
 		thresholdAttributes[threshold.attribute] = schema.Int64Attribute{
 			Optional:            true,
@@ -76,52 +78,58 @@ func AddSecurityGate(attributes map[string]schema.Attribute) {
 			MarkdownDescription: fmt.Sprintf(thresholdDescription, threshold.severity),
 		}
 	}
-	attributes["security_gate"] = schema.SingleNestedAttribute{
-		Optional:   true,
+	blocks["security_gate"] = schema.SingleNestedBlock{
 		Attributes: thresholdAttributes,
-		MarkdownDescription: "Thresholds for the security gate. Only meaningful while `security_gate_active` " +
-			"is `true`; SecObserve clears every threshold server-side otherwise, and this attribute is rejected " +
-			"at plan time if set alongside `security_gate_active = false`.\n\n" +
+		MarkdownDescription: "Security gate configuration. Omit this block entirely to inherit from the " +
+			"product group or, failing that, from the instance settings (which defaults to active). Writing " +
+			"the block -- even empty -- activates the gate; set `active = false` inside it to switch the gate " +
+			"off explicitly instead of inheriting.\n\n" +
+			"SecObserve clears every threshold server-side whenever the gate ends up inactive, so a threshold " +
+			"is rejected at plan time if set alongside `active = false`.\n\n" +
 			"Leave a threshold unset to inherit the instance-wide default for that severity -- the default is " +
 			"not reflected back into this block, matching the rest of this provider's read-only/informational " +
 			"data being reserved for data sources.\n\n" +
 			"~> Unlike every other attribute in this provider, this block's state is echoed from your " +
 			"configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot " +
-			"recover configured thresholds (add them to your configuration afterwards to match what's actually " +
-			"configured), and changing a threshold directly in SecObserve rather than through Terraform will " +
+			"recover a configured gate (add the block to your configuration afterwards to match what's " +
+			"actually configured), and changing it directly in SecObserve rather than through Terraform will " +
 			"not be detected as drift.",
 	}
 }
 
-// ToAPI converts the block into its request representation.
+// ToAPI converts the block into its request representation. A present block
+// with `active` unset resolves to active = true; thresholds are sent as
+// configured regardless, since ValidateSecurityGate is what rejects a
+// threshold alongside an explicit active = false.
 func (s SecurityGate) ToAPI() client.SecurityGateFields {
-	fields := client.SecurityGateFields{
-		SecurityGateActive: tfutil.BoolPtr(s.SecurityGateActive),
+	if s.Block == nil {
+		return client.SecurityGateFields{}
 	}
-	if s.Thresholds != nil {
-		fields.SecurityGateThresholdCritical = tfutil.Int64Ptr(s.Thresholds.Critical)
-		fields.SecurityGateThresholdHigh = tfutil.Int64Ptr(s.Thresholds.High)
-		fields.SecurityGateThresholdMedium = tfutil.Int64Ptr(s.Thresholds.Medium)
-		fields.SecurityGateThresholdLow = tfutil.Int64Ptr(s.Thresholds.Low)
-		fields.SecurityGateThresholdNone = tfutil.Int64Ptr(s.Thresholds.None)
-		fields.SecurityGateThresholdUnknown = tfutil.Int64Ptr(s.Thresholds.Unknown)
+
+	active := true
+	if !s.Block.Active.IsNull() && !s.Block.Active.IsUnknown() {
+		active = s.Block.Active.ValueBool()
 	}
-	return fields
+
+	return client.SecurityGateFields{
+		SecurityGateActive:            &active,
+		SecurityGateThresholdCritical: tfutil.Int64Ptr(s.Block.Critical),
+		SecurityGateThresholdHigh:     tfutil.Int64Ptr(s.Block.High),
+		SecurityGateThresholdMedium:   tfutil.Int64Ptr(s.Block.Medium),
+		SecurityGateThresholdLow:      tfutil.Int64Ptr(s.Block.Low),
+		SecurityGateThresholdNone:     tfutil.Int64Ptr(s.Block.None),
+		SecurityGateThresholdUnknown:  tfutil.Int64Ptr(s.Block.Unknown),
+	}
 }
 
-// FromAPI fills the block from an API response.
-//
-// Deliberately does NOT populate Thresholds: unlike the rest of this
-// provider, security_gate's state is carried forward from the plan/prior
-// state by the resource's Create/Read/Update, not read back from the
-// response. See the package doc comment on plan_modifiers.go.
-func (s *SecurityGate) FromAPI(fields client.SecurityGateFields) {
-	s.SecurityGateActive = tfutil.Bool(fields.SecurityGateActive)
-}
+// FromAPI intentionally does nothing: security_gate's state is carried
+// forward from the plan/prior state by the resource's Create/Read/Update, not
+// read back from the response. See the package doc comment on
+// plan_modifiers.go.
+func (s *SecurityGate) FromAPI(client.SecurityGateFields) {}
 
 // ValidateSecurityGate rejects a threshold of 0, which SecObserve cannot
-// store, and rejects/warns about the security_gate block's relationship with
-// security_gate_active.
+// store, and rejects a threshold set alongside an explicit active = false.
 //
 // The fill-in logic tests the submitted thresholds for truthiness rather than
 // presence (core/api/serializers_product.py:122-134), so a 0 counts as "not
@@ -130,7 +138,7 @@ func (s *SecurityGate) FromAPI(fields client.SecurityGateFields) {
 // for an attribute the practitioner wrote, so accepting a 0 would fail the
 // apply with "provider produced inconsistent result".
 func (s SecurityGate) ValidateSecurityGate(diags *diag.Diagnostics) {
-	if s.Thresholds == nil {
+	if s.Block == nil {
 		return
 	}
 
@@ -138,12 +146,12 @@ func (s SecurityGate) ValidateSecurityGate(diags *diag.Diagnostics) {
 		attribute string
 		value     types.Int64
 	}{
-		{"threshold_critical", s.Thresholds.Critical},
-		{"threshold_high", s.Thresholds.High},
-		{"threshold_medium", s.Thresholds.Medium},
-		{"threshold_low", s.Thresholds.Low},
-		{"threshold_none", s.Thresholds.None},
-		{"threshold_unknown", s.Thresholds.Unknown},
+		{"threshold_critical", s.Block.Critical},
+		{"threshold_high", s.Block.High},
+		{"threshold_medium", s.Block.Medium},
+		{"threshold_low", s.Block.Low},
+		{"threshold_none", s.Block.None},
+		{"threshold_unknown", s.Block.Unknown},
 	}
 
 	for _, threshold := range thresholds {
@@ -161,30 +169,23 @@ func (s SecurityGate) ValidateSecurityGate(diags *diag.Diagnostics) {
 		)
 	}
 
-	active := s.SecurityGateActive
-	if active.IsUnknown() {
+	active := s.Block.Active
+	if active.IsUnknown() || active.IsNull() || active.ValueBool() {
+		// Block present with active unset or true: the gate is on, every
+		// threshold is meaningful.
 		return
 	}
 
-	if !active.IsNull() && !active.ValueBool() {
+	for _, threshold := range thresholds {
+		if threshold.value.IsNull() || threshold.value.IsUnknown() {
+			continue
+		}
 		diags.AddAttributeError(
-			path.Root("security_gate"),
+			path.Root("security_gate").AtName(threshold.attribute),
 			"Cannot be set while the security gate is inactive",
-			"SecObserve clears every threshold server-side whenever security_gate_active is false, "+
+			"SecObserve clears every threshold server-side whenever the security gate is inactive, "+
 				"regardless of what is configured here.\n\n"+
-				"Remove this block, or set security_gate_active to true.",
-		)
-		return
-	}
-
-	if active.IsNull() {
-		diags.AddAttributeWarning(
-			path.Root("security_gate"),
-			"Ignored unless security_gate_active is true",
-			"security_gate_active is unset here, so SecObserve never consults these thresholds on this "+
-				"resource -- whatever ends up active comes from the product group or the instance-wide default "+
-				"instead, using their own thresholds. Set security_gate_active = true to make this resource's "+
-				"thresholds apply.",
+				"Remove this attribute, or remove active = false from the security_gate block.",
 		)
 	}
 }

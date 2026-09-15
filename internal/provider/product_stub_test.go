@@ -14,10 +14,11 @@ import (
 
 // The security_gate block is never populated from the response -- state is
 // carried from the plan, unlike every other computed value in this provider.
-// So leaving it unset must mean "absent from state" regardless of whether the
-// gate is off (nothing to fill) or on (server fills real defaults, but this
-// provider deliberately doesn't surface them; see security_gate.go).
-func TestProductSecurityGateBlockOmittedNeverTracked(t *testing.T) {
+// Omitting the block entirely means inherit: no block in state at all,
+// regardless of whether the gate ends up off (nothing to fill) or on (server
+// fills real defaults, but this provider deliberately doesn't surface them;
+// see security_gate.go).
+func TestProductSecurityGateBlockOmittedMeansInherit(t *testing.T) {
 	newStubSecObserve(t)
 
 	resource.Test(t, resource.TestCase{
@@ -26,37 +27,20 @@ func TestProductSecurityGateBlockOmittedNeverTracked(t *testing.T) {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                 = "gate-off"
-  security_gate_active = false
+  name = "gate-inherit"
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("secobserve_product.test", "security_gate_active", "false"),
-					resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate.threshold_medium"),
-				),
-			},
-			{
-				Config: `
-resource "secobserve_product" "test" {
-  name                 = "gate-off"
-  security_gate_active = true
-}`,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
-				},
-				Check: resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate.threshold_medium"),
+				Check: resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate.%"),
 			},
 		},
 	})
 }
 
-// An explicit threshold is echoed back in state unchanged, and a repeat apply
-// stays empty, even though the live API's response for the other five,
-// unset thresholds differs (the stub fills them per thresholdDefaults) --
-// proving state comes from the plan, not the response, for this block.
-func TestProductSecurityGateThresholdRoundTrips(t *testing.T) {
+// Writing the block with active = false and nothing else is the explicit way
+// to switch the gate off instead of inheriting.
+func TestProductSecurityGateExplicitlyDisabled(t *testing.T) {
 	newStubSecObserve(t)
 
 	resource.Test(t, resource.TestCase{
@@ -65,9 +49,39 @@ func TestProductSecurityGateThresholdRoundTrips(t *testing.T) {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                  = "gate-threshold"
-  security_gate_active  = true
-  security_gate = {
+  name = "gate-disabled"
+  security_gate {
+    active = false
+  }
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("secobserve_product.test", "security_gate.active", "false"),
+					resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate.threshold_medium"),
+				),
+			},
+		},
+	})
+}
+
+// Writing the block with a threshold and no active field implies activating
+// the gate. The threshold is echoed back in state unchanged, and a repeat
+// apply stays empty, even though the live API's response for the other five,
+// unset thresholds differs (the stub fills them per thresholdDefaults) --
+// proving state comes from the plan, not the response, for this block.
+func TestProductSecurityGateThresholdImpliesActive(t *testing.T) {
+	newStubSecObserve(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "secobserve_product" "test" {
+  name = "gate-threshold"
+  security_gate {
     threshold_medium = 7
   }
 }`,
@@ -76,6 +90,7 @@ resource "secobserve_product" "test" {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("secobserve_product.test", "security_gate.threshold_medium", "7"),
+					resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate.active"),
 					resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate.threshold_low"),
 				),
 			},
@@ -97,9 +112,8 @@ func TestProductZeroThresholdRejected(t *testing.T) {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                  = "zero-threshold"
-  security_gate_active  = true
-  security_gate = {
+  name = "zero-threshold"
+  security_gate {
     threshold_medium = 0
   }
 }`,
@@ -109,10 +123,10 @@ resource "secobserve_product" "test" {
 	})
 }
 
-// An explicit threshold alongside security_gate_active = false is likewise
-// unrepresentable: SecObserve force-clears every threshold whenever the gate
-// is off, so an explicit value here would produce the same "provider produced
-// inconsistent result" apply failure as the 0 case above.
+// An explicit threshold alongside active = false is likewise unrepresentable:
+// SecObserve force-clears every threshold whenever the gate is off, so an
+// explicit value here would produce the same "provider produced inconsistent
+// result" apply failure as the 0 case above.
 func TestProductThresholdRejectedWhileGateInactive(t *testing.T) {
 	newStubSecObserve(t)
 
@@ -122,10 +136,10 @@ func TestProductThresholdRejectedWhileGateInactive(t *testing.T) {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                  = "inactive-threshold"
-  security_gate_active  = false
-  security_gate = {
-    threshold_medium = 7
+  name = "inactive-threshold"
+  security_gate {
+    active            = false
+    threshold_medium  = 7
   }
 }`,
 				ExpectError: regexp.MustCompile(`Cannot be set while the security gate is inactive`),
@@ -134,33 +148,10 @@ resource "secobserve_product" "test" {
 	})
 }
 
-// A security_gate block with security_gate_active left unset is accepted --
-// unlike the false case above, this isn't a Terraform-protocol violation --
-// but warns, since SecObserve never consults it without an explicit true.
-func TestProductThresholdWarnsWhileGateUnset(t *testing.T) {
-	newStubSecObserve(t)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: `
-resource "secobserve_product" "test" {
-  name = "gate-unset"
-  security_gate = {
-    threshold_medium = 7
-  }
-}`,
-				Check: resource.TestCheckResourceAttr("secobserve_product.test", "security_gate.threshold_medium", "7"),
-			},
-		},
-	})
-}
-
 // Same failure mode for branch housekeeping: a repository_branch_housekeeping
-// block alongside repository_branch_housekeeping_active = false is rejected
-// at plan time instead of crashing the apply. This is the exact combination
-// reported against a live product_group: keep_inactive_days and
+// block with active = false alongside keep_inactive_days/exempt_branches is
+// rejected at plan time instead of crashing the apply. This is the exact
+// combination reported against a live product_group: keep_inactive_days and
 // exempt_branches were left over in config from before housekeeping was
 // disabled.
 func TestProductHousekeepingFieldsRejectedWhileInactive(t *testing.T) {
@@ -172,11 +163,11 @@ func TestProductHousekeepingFieldsRejectedWhileInactive(t *testing.T) {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                                   = "inactive-housekeeping"
-  repository_branch_housekeeping_active = false
-  repository_branch_housekeeping = {
-    keep_inactive_days = 60
-    exempt_branches    = "^(main|release/.*)$"
+  name = "inactive-housekeeping"
+  repository_branch_housekeeping {
+    active              = false
+    keep_inactive_days  = 60
+    exempt_branches     = "^(main|release/.*)$"
   }
 }`,
 				ExpectError: regexp.MustCompile(`Cannot be set while housekeeping is inactive`),
@@ -185,13 +176,14 @@ resource "secobserve_product" "test" {
 	})
 }
 
-// Flipping repository_branch_housekeeping_active with the block always
-// omitted has to stay a clean, empty-plan no-op in both directions -- this is
-// the direct proof the refactor removes the "provider produced inconsistent
-// result" bug class reported against a live product_group, rather than just
-// renaming the attributes: there is no sibling-aware plan modifier left to
-// get this wrong, because there's nothing computed to carry forward.
-func TestProductHousekeepingActiveFlipWithBlockOmitted(t *testing.T) {
+// Toggling the repository_branch_housekeeping block between omitted
+// (inherit), present-and-empty (implies active) and omitted again has to
+// stay a clean, empty-plan no-op throughout -- this is the direct proof the
+// refactor removes the "provider produced inconsistent result" bug class
+// reported against a live product_group, rather than just renaming the
+// attributes: there is no sibling-aware plan modifier left to get this
+// wrong, because there's nothing computed to carry forward.
+func TestProductHousekeepingBlockPresenceFlip(t *testing.T) {
 	newStubSecObserve(t)
 
 	resource.Test(t, resource.TestCase{
@@ -200,8 +192,7 @@ func TestProductHousekeepingActiveFlipWithBlockOmitted(t *testing.T) {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                                   = "housekeeping-flip"
-  repository_branch_housekeeping_active = true
+  name = "housekeeping-flip"
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
@@ -210,8 +201,8 @@ resource "secobserve_product" "test" {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                                   = "housekeeping-flip"
-  repository_branch_housekeeping_active = false
+  name = "housekeeping-flip"
+  repository_branch_housekeeping {}
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
@@ -220,8 +211,7 @@ resource "secobserve_product" "test" {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                                   = "housekeeping-flip"
-  repository_branch_housekeeping_active = true
+  name = "housekeeping-flip"
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
@@ -231,9 +221,8 @@ resource "secobserve_product" "test" {
 	})
 }
 
-// Same proof for the security gate: flipping security_gate_active with
-// security_gate always omitted is a clean no-op in both directions.
-func TestProductGateActiveFlipWithBlockOmitted(t *testing.T) {
+// Same proof for the security gate.
+func TestProductGateBlockPresenceFlip(t *testing.T) {
 	newStubSecObserve(t)
 
 	resource.Test(t, resource.TestCase{
@@ -242,8 +231,7 @@ func TestProductGateActiveFlipWithBlockOmitted(t *testing.T) {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                 = "flip-unset"
-  security_gate_active = true
+  name = "gate-flip"
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
@@ -252,8 +240,8 @@ resource "secobserve_product" "test" {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                 = "flip-unset"
-  security_gate_active = false
+  name = "gate-flip"
+  security_gate {}
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
@@ -262,8 +250,7 @@ resource "secobserve_product" "test" {
 			{
 				Config: `
 resource "secobserve_product" "test" {
-  name                 = "flip-unset"
-  security_gate_active = true
+  name = "gate-flip"
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
@@ -273,8 +260,9 @@ resource "secobserve_product" "test" {
 	})
 }
 
-// Leaving a tri-state unset must send null so SecObserve keeps inheriting,
-// rather than sending false and pinning the value.
+// Omitting security_gate/repository_branch_housekeeping entirely must send
+// null so SecObserve keeps inheriting, rather than sending false and pinning
+// the value.
 func TestProductTriStateStaysNull(t *testing.T) {
 	newStubSecObserve(t)
 
@@ -287,8 +275,8 @@ func TestProductTriStateStaysNull(t *testing.T) {
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate_active"),
-					resource.TestCheckNoResourceAttr("secobserve_product.test", "repository_branch_housekeeping_active"),
+					resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate.%"),
+					resource.TestCheckNoResourceAttr("secobserve_product.test", "repository_branch_housekeeping.%"),
 					resource.TestCheckNoResourceAttr("secobserve_product.test", "risk_acceptance_expiry_active"),
 					// Defaults, in contrast, are known and sent.
 					resource.TestCheckResourceAttr("secobserve_product.test", "apply_general_rules", "true"),

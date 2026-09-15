@@ -21,8 +21,10 @@ func TestModelMatchesSchema(t *testing.T) {
 		Name:        types.StringValue("product"),
 		Description: types.StringValue("a product"),
 	}
-	before.SecurityGateActive = types.BoolValue(true)
-	before.SecurityGate.Thresholds = &schemacommon.SecurityGateThresholds{Critical: types.Int64Value(0)}
+	before.SecurityGate.Block = &schemacommon.SecurityGateBlock{
+		Active:   types.BoolValue(true),
+		Critical: types.Int64Value(0),
+	}
 	before.IssueTrackerType = types.StringValue("Jira")
 	before.OSVLinuxDistribution = types.StringValue("Debian")
 	before.ObservationNotificationStatusList = types.SetValueMust(

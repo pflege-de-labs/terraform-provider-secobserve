@@ -102,9 +102,9 @@ from the response body will show a permanent diff.
 
 | Field | Behaviour | Source |
 |---|---|---|
-| `security_gate.threshold_*` | filled from global settings when `security_gate_active` is true and the value was omitted; forced to null when it is false | `core/api/serializers_product.py:122-142` |
+| `security_gate.threshold_*` | filled from global settings when the gate is active and the value was omitted; forced to null when it is inactive | `core/api/serializers_product.py:122-142` |
 | `security_gate.threshold_*` set to `0` | the fill-in test is `if not attrs.get(...)` — truthiness, not presence — so a submitted `0` counts as unset and is replaced by the instance default (`99999` for medium, low, none and unknown) | `core/api/serializers_product.py:122-134` |
-| `repository_branch_housekeeping.keep_inactive_days`, `.exempt_branches` | same fill-or-clear pattern driven by `repository_branch_housekeeping_active` | `serializers_product.py:112-120` |
+| `repository_branch_housekeeping.keep_inactive_days`, `.exempt_branches` | same fill-or-clear pattern driven by housekeeping being active | `serializers_product.py:112-120` |
 | `propagate_branches` | an empty or effectively-empty list is stored as `null`, not `[]` | `serializers_product.py:660-663` |
 | `license_policy_item.license_expression` | re-normalised through `spdx_licensing.validate(strict=True)`; the stored value can differ from the submitted one | `licenses/api/serializers.py:591-600` |
 | `license_policy.ignore_component_types` | dual representation with `ignore_component_type_list`; the list form is always injected into responses | `licenses/api/serializers.py:482-499` |
@@ -123,28 +123,31 @@ tests in `internal/provider/product_stub_test.go`:
    Accepting it produces `Provider produced inconsistent result after apply:
    .security_gate.threshold_medium: was cty.NumberIntVal(0), but now
    cty.NumberIntVal(99999)`. The rejection is unconditional rather than only
-   when `security_gate_active` is true, because the gate can also be switched
-   on by the product group, which is not visible at plan time. While the gate
-   is off the thresholds are not evaluated anyway, so nothing is lost.
+   when the gate is active, because the gate can also be switched on by the
+   product group, which is not visible at plan time. While the gate is off
+   the thresholds are not evaluated anyway, so nothing is lost.
 
-2. **An explicit threshold/housekeeping value combined with the sibling
-   `*_active` explicitly `false` is likewise unrepresentable**, for the same
-   reason as the `0` case: SecObserve force-clears the dependent values
+2. **An explicit threshold/housekeeping value combined with `active = false`
+   inside the same block is likewise unrepresentable**, for the same reason
+   as the `0` case: SecObserve force-clears the dependent values
    unconditionally, and Terraform forbids an applied value that differs from
    an explicitly-configured one. `schemacommon.ValidateSecurityGate` /
    `ValidateBranchHousekeeping` reject the combination at plan time.
 
-3. **`security_gate` and `repository_branch_housekeeping` are the one
-   deliberate exception to "always write state from the response body"
-   (see the top of this file).** Both are plain `Optional` nested
-   attributes with no `Computed`, so their state is echoed from the
+3. **`security_gate` and `repository_branch_housekeeping` are real Terraform
+   blocks (`schema.SingleNestedBlock`), not nested attributes, and are the
+   one deliberate exception to "always write state from the response body"
+   (see the top of this file).** Every field inside, including `active`, is
+   plain `Optional` with no `Computed`, so state is echoed from the
    plan/prior state by the resource's `Create`/`Read`/`Update`, never
-   populated from `FromAPI`. This is what makes it possible to leave a
-   threshold or housekeeping setting unconfigured and flip the sibling
-   `*_active` bool freely without ever hitting an inconsistent-apply error —
-   there is nothing computed to carry forward, so there is nothing for the
-   server's fill-or-clear to contradict. The price is that a server-filled
-   default value is never reflected back into the resource (matching this
+   populated from `FromAPI`. Block *presence* is what encodes the tri-state:
+   omitting the block means inherit; writing it (even empty) activates the
+   feature; `active = false` inside is the explicit way to switch it off
+   without inheriting. This is what makes toggling the block in and out of
+   existence freely a guaranteed empty-plan no-op — there is nothing
+   computed to carry forward, so there is nothing for the server's
+   fill-or-clear to contradict. The price is that a server-filled default
+   value is never reflected back into the resource (matching this
    provider's existing policy of reserving informational/computed data for
    data sources, not resources) — `issue_tracker_base_url` still needs the
    sibling-aware `schemacommon.StringUnknownWhenStringSiblingChanges` plan
@@ -153,40 +156,42 @@ tests in `internal/provider/product_stub_test.go`:
 
    Two real costs of this trade-off, found by the acceptance suite rather
    than reasoned out in advance: **`terraform import` cannot recover a
-   configured threshold or housekeeping setting** (there is no plan or prior
-   state to echo during import, so the block always comes back empty even
-   when SecObserve has real values configured — `TestAccProductLifecycle`'s
-   `ImportStateVerifyIgnore` documents this), and **a threshold or
-   housekeeping value changed directly in SecObserve rather than through
-   Terraform is not detected as drift** on the next plan, unlike every other
-   attribute this provider manages. Both are documented on the attributes
-   themselves. Accepted deliberately: the alternative (reading from the
-   response) is exactly what produced the "provider produced inconsistent
-   result" crash this design fixes, and both gaps only matter for
-   out-of-band changes, which are the less common path for a
-   Terraform-managed resource.
+   configured block** (there is no plan or prior state to echo during
+   import, so the block always comes back empty even when SecObserve has
+   real values configured — `TestAccProductLifecycle`'s
+   `ImportStateVerifyIgnore` documents this), and **a value changed directly
+   in SecObserve rather than through Terraform is not detected as drift** on
+   the next plan, unlike every other attribute this provider manages. Both
+   are documented on the blocks themselves. Accepted deliberately: the
+   alternative (reading from the response) is exactly what produced the
+   "provider produced inconsistent result" crash this design fixes, and both
+   gaps only matter for out-of-band changes, which are the less common path
+   for a Terraform-managed resource.
 
-### Inheritance chain for `security_gate_active` and
-`repository_branch_housekeeping_active`
+### Inheritance chain for the security gate and branch housekeeping
 
 Not previously documented anywhere in this repo, and surprising enough to be
 worth calling out explicitly (`core/services/security_gate.py:20-24`,
 `core/services/housekeeping.py:29-38`, `commons/models.py:21,139`):
 
 - The **instance-wide `Settings` default is `true`** for both
-  (`security_gate_active`/`branch_housekeeping_active`, non-nullable
-  `BooleanField(default=True)`). Leaving every level unset means the gate
-  and housekeeping are **on** by default, not off.
+  (`security_gate_active`/`branch_housekeeping_active` columns, non-nullable
+  `BooleanField(default=True)`). Omitting `security_gate`/
+  `repository_branch_housekeeping` at every level means the gate and
+  housekeeping are **on** by default, not off — this is why omitting the
+  block means inherit, never disabled; see the schema attribute
+  descriptions.
 - If a product belongs to a product group, **the group's explicit
-  `true`/`false` always overrides the product's own value outright** — this
-  is not "most specific wins". The product's own `security_gate_active`
-  (and its thresholds) are only consulted when the product group's is
-  `null`. Only when *both* are `null` does the instance-wide default apply.
-- Consequence for the nested blocks: a product's `security_gate`/
-  `repository_branch_housekeeping` values are silently never consulted
-  whenever its product group has its own explicit `true`/`false` set — the
-  provider cannot detect this at plan time (it would require reading a
-  second resource), so it is documented rather than validated.
+  `active` always overrides the product's own value outright** — this is
+  not "most specific wins". The product's own `security_gate`/
+  `repository_branch_housekeeping` block (including its thresholds) is only
+  consulted when the product group's is absent. Only when *both* are absent
+  does the instance-wide default apply.
+- Consequence: a product's `security_gate`/`repository_branch_housekeeping`
+  block is silently never consulted whenever its product group has its own
+  block present — the provider cannot detect this at plan time (it would
+  require reading a second resource), so it is documented rather than
+  validated.
 
 ## Values that never round-trip
 

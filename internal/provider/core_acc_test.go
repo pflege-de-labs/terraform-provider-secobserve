@@ -25,10 +25,9 @@ func TestAccProductGroupLifecycle(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 resource "secobserve_product_group" "test" {
-  name                                  = %q
-  description                           = "created by an acceptance test"
-  security_gate_active                  = true
-  security_gate = {
+  name        = %q
+  description = "created by an acceptance test"
+  security_gate {
     threshold_critical = 1
   }
   observation_notification_min_severity = "High"
@@ -47,8 +46,7 @@ resource "secobserve_product_group" "test" {
 				// Clearing a string attribute has to actually clear it.
 				Config: fmt.Sprintf(`
 resource "secobserve_product_group" "test" {
-  name                 = %q
-  security_gate_active = true
+  name = %q
 }`, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
@@ -86,16 +84,15 @@ resource "secobserve_product" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("secobserve_product.test", "name", name),
 					resource.TestCheckResourceAttr("secobserve_product.test", "apply_general_rules", "true"),
-					// Tri-states must come back null so inheritance keeps working.
-					resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate_active"),
+					// Omitting the block must come back null so inheritance keeps working.
+					resource.TestCheckNoResourceAttr("secobserve_product.test", "security_gate.%"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(`
 resource "secobserve_product" "test" {
-  name                  = %q
-  security_gate_active  = true
-  security_gate = {
+  name = %q
+  security_gate {
     threshold_critical = 2
   }
   propagate_branches = [{ propagate_to = "^release/.*$" }]

@@ -21,8 +21,10 @@ func TestModelMatchesSchema(t *testing.T) {
 		Name:        types.StringValue("group"),
 		Description: types.StringValue("a group"),
 	}
-	before.SecurityGateActive = types.BoolValue(true)
-	before.SecurityGate.Thresholds = &schemacommon.SecurityGateThresholds{Critical: types.Int64Value(3)}
+	before.SecurityGate.Block = &schemacommon.SecurityGateBlock{
+		Active:   types.BoolValue(true),
+		Critical: types.Int64Value(3),
+	}
 	before.ObservationNotificationStatusList = types.SetValueMust(
 		types.StringType, []attr.Value{types.StringValue("Open")})
 	before.AssessmentApprovers = types.SetValueMust(types.Int64Type, []attr.Value{types.Int64Value(7)})
@@ -33,7 +35,7 @@ func TestModelMatchesSchema(t *testing.T) {
 
 	after := tftest.RoundTrip(t, New(), before)
 
-	if after.Name != before.Name || !after.SecurityGateActive.Equal(before.SecurityGateActive) {
+	if after.Name != before.Name || !after.SecurityGate.Block.Active.Equal(before.SecurityGate.Block.Active) {
 		t.Errorf("round-trip lost values: %+v", after)
 	}
 }
