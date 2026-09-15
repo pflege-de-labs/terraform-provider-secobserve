@@ -13,24 +13,26 @@ Built against SecObserve **1.58.0**.
 
 ## Status
 
-Phases 0 and 1 are in place.
+All four phases are implemented. Every resource supports `terraform import`
+and the `import { }` config block.
 
-**Resources:** `secobserve_product_group`, `secobserve_product`,
-`secobserve_branch`, `secobserve_service`, `secobserve_product_member`,
-`secobserve_product_authorization_group_member`,
-`secobserve_product_api_token`.
+**Resources:**
+
+| Phase | Resources |
+|---|---|
+| 1 — core products | `secobserve_product_group`, `secobserve_product`, `secobserve_branch`, `secobserve_service`, `secobserve_product_member`, `secobserve_product_authorization_group_member`, `secobserve_product_api_token` |
+| 2 — access control & settings | `secobserve_user`, `secobserve_authorization_group`, `secobserve_authorization_group_member`, `secobserve_settings` |
+| 3 — rules & API import | `secobserve_general_rule`, `secobserve_product_rule`, `secobserve_api_configuration` |
+| 4 — license management | `secobserve_license_group`, `secobserve_license_group_member`, `secobserve_license_group_authorization_group_member`, `secobserve_license_policy`, `secobserve_license_policy_item`, `secobserve_license_policy_member`, `secobserve_license_policy_authorization_group_member` |
 
 **Data sources:** `secobserve_product`, `secobserve_product_group`,
 `secobserve_branch`, `secobserve_service`, `secobserve_parser`,
-`secobserve_parsers`.
+`secobserve_parsers`, `secobserve_user`, `secobserve_authorization_group`,
+`secobserve_periodic_tasks`, `secobserve_license`, `secobserve_license_group`,
+`secobserve_license_policy`, `secobserve_vex_counter`.
 
-Still to come:
-
-| Phase | Contents |
-|---|---|
-| 2 | users, authorization groups, instance settings |
-| 3 | general and product rules, API import configurations |
-| 4 | license groups, license policies, VEX counters |
+Registry publishing is not yet set up; see [CONTRIBUTING.md](CONTRIBUTING.md)
+for local development via `dev_overrides`.
 
 ### Things worth knowing
 
@@ -58,7 +60,8 @@ with references to the SecObserve source.
 
 ## Requirements
 
-- Terraform 1.11 or newer (write-only attributes are used for API keys).
+- Terraform 1.11 or newer (`secobserve_api_configuration.test_connection` is a
+  write-only attribute).
 - Go 1.25 to build from source.
 - A SecObserve **superuser** user API token. SecObserve filters list responses
   for non-superusers and rejects writes to users, general rules, settings and
