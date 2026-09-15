@@ -28,6 +28,13 @@ func (r *settingsResource) ValidateConfig(
 		return
 	}
 
+	if config.FeatureAutomaticOSVScanning.IsUnknown() || config.FeatureLicenseManagement.IsUnknown() {
+		// Unknown (e.g. from a variable, unresolved during `terraform
+		// validate`) must not be treated as null/false -- defer to
+		// SecObserve's own behavior as the backstop once both are known.
+		return
+	}
+
 	osvScanningEffectivelyTrue := config.FeatureAutomaticOSVScanning.IsNull() ||
 		config.FeatureAutomaticOSVScanning.ValueBool()
 	licenseManagementExplicitlyFalse := !config.FeatureLicenseManagement.IsNull() &&

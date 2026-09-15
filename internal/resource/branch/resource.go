@@ -162,6 +162,13 @@ func (r *branchResource) ValidateConfig(
 		return
 	}
 
+	if config.OSVLinuxRelease.IsUnknown() || config.OSVLinuxDistribution.IsUnknown() {
+		// Unknown (e.g. from a variable, unresolved during `terraform
+		// validate`) must not be treated as absent -- defer to SecObserve's
+		// own 400 as the backstop once both values are known.
+		return
+	}
+
 	if tfutil.StringValue(config.OSVLinuxRelease) != "" && tfutil.StringValue(config.OSVLinuxDistribution) == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("osv_linux_release"),

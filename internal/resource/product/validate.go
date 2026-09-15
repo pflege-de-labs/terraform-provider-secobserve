@@ -32,6 +32,17 @@ func (r *productResource) ValidateConfig(
 // validateIssueTracker covers the all-or-none rule, the requirement that an
 // active tracker has a type, and the Jira-only fields.
 func (m model) validateIssueTracker(diags *diag.Diagnostics) {
+	if m.IssueTrackerType.IsUnknown() || m.IssueTrackerBaseURL.IsUnknown() ||
+		m.IssueTrackerAPIKey.IsUnknown() || m.IssueTrackerProjectID.IsUnknown() {
+		// A core field resolves to unknown when it comes from a variable or
+		// resource attribute not yet known (e.g. every root variable is
+		// unknown during `terraform validate`, regardless of whether it has
+		// a value). Treating unknown the same as absent would misreport a
+		// configured value as missing; defer the all-or-none check to
+		// SecObserve's own 400 as the backstop once the value is known.
+		return
+	}
+
 	trackerType := tfutil.StringValue(m.IssueTrackerType)
 	baseURL := tfutil.StringValue(m.IssueTrackerBaseURL)
 	apiKey := tfutil.StringValue(m.IssueTrackerAPIKey)
@@ -118,6 +129,12 @@ func (m model) validateIssueTracker(diags *diag.Diagnostics) {
 }
 
 func (m model) validateScanners(diags *diag.Diagnostics) {
+	if m.OSVLinuxRelease.IsUnknown() || m.OSVLinuxDistribution.IsUnknown() {
+		// See the matching comment in validateIssueTracker: unknown must not
+		// be treated as absent.
+		return
+	}
+
 	if tfutil.StringValue(m.OSVLinuxRelease) != "" && tfutil.StringValue(m.OSVLinuxDistribution) == "" {
 		diags.AddAttributeError(
 			path.Root("osv_linux_release"),
