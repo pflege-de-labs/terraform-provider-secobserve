@@ -180,7 +180,11 @@ func AddRuleFields(attributes map[string]schema.Attribute) {
 // would be silently normalized to null server-side
 // (commons/services/functions.py:52-86).
 func (r RuleFields) ValidateRuleFields(diags *diag.Diagnostics) {
-	if r.Type.ValueString() == client.RuleTypeRego && tfutil.StringValue(r.RegoModule) == "" {
+	// Unknown (e.g. from a variable, unresolved during `terraform validate`)
+	// must not be treated as absent -- defer to SecObserve's own error as
+	// the backstop once both values are known.
+	if !r.Type.IsUnknown() && !r.RegoModule.IsUnknown() &&
+		r.Type.ValueString() == client.RuleTypeRego && tfutil.StringValue(r.RegoModule) == "" {
 		diags.AddAttributeError(
 			path.Root("rego_module"),
 			"rego_module is required when type is \"Rego\"",
