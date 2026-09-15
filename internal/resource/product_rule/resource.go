@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -91,10 +92,10 @@ func (r *productRuleResource) ValidateConfig(
 	config.RuleFields.ValidateRuleFields(&resp.Diagnostics)
 }
 
-func (m *model) fromAPI(rule client.Rule) {
+func (m *model) fromAPI(ctx context.Context, rule client.Rule, diags *diag.Diagnostics) {
 	m.ID = types.Int64Value(rule.ID)
 	m.Product = tfutil.Int64(rule.Product)
-	m.RuleFields.FromAPI(rule.RuleFields)
+	m.RuleFields.FromAPI(ctx, rule.RuleFields, diags)
 	m.RuleApproval.FromAPI(rule)
 }
 
@@ -105,14 +106,14 @@ func (r *productRuleResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	created, err := r.client.CreateProductRule(ctx, plan.Product.ValueInt64(), plan.RuleFields.ToAPI())
+	created, err := r.client.CreateProductRule(ctx, plan.Product.ValueInt64(), plan.RuleFields.ToAPI(ctx, &resp.Diagnostics))
 	if err != nil {
 		resp.Diagnostics.AddError("Could not create SecObserve product rule", err.Error())
 		return
 	}
 
 	var state model
-	state.fromAPI(created)
+	state.fromAPI(ctx, created, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -134,7 +135,7 @@ func (r *productRuleResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var refreshed model
-	refreshed.fromAPI(rule)
+	refreshed.fromAPI(ctx, rule, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
 }
 
@@ -152,14 +153,14 @@ func (r *productRuleResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	updated, err := r.client.UpdateProductRule(
-		ctx, state.ID.ValueInt64(), plan.Product.ValueInt64(), plan.RuleFields.ToAPI())
+		ctx, state.ID.ValueInt64(), plan.Product.ValueInt64(), plan.RuleFields.ToAPI(ctx, &resp.Diagnostics))
 	if err != nil {
 		resp.Diagnostics.AddError("Could not update SecObserve product rule", err.Error())
 		return
 	}
 
 	var refreshed model
-	refreshed.fromAPI(updated)
+	refreshed.fromAPI(ctx, updated, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
 }
 

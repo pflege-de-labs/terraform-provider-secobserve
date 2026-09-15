@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -18,15 +19,30 @@ import (
 
 // BranchPropagation is the branch propagation block of a product or product
 // group.
+//
+// PropagateBranches is types.List, not a plain Go slice: a config expression
+// whose result depends on a not-yet-known upstream value (e.g. a for_each
+// over a map derived from another resource) plans this attribute as unknown,
+// and the framework's reflection-based Get/Set cannot populate a plain slice
+// field from an unknown list -- it panics with "Received unknown value,
+// however the target type cannot handle unknown values", naming
+// basetypes.ListValue as the fix. ElementsAs/ListValueFrom convert to/from
+// []PropagateBranchModel explicitly in ToAPI/FromAPI instead.
 type BranchPropagation struct {
-	PropagateBranches               []PropagateBranchModel `tfsdk:"propagate_branches"`
-	PropagateBranchesNewAssessment  types.Bool             `tfsdk:"propagate_branches_new_assessment"`
-	PropagateBranchesNewObservation types.Bool             `tfsdk:"propagate_branches_new_observation"`
+	PropagateBranches               types.List `tfsdk:"propagate_branches"`
+	PropagateBranchesNewAssessment  types.Bool `tfsdk:"propagate_branches_new_assessment"`
+	PropagateBranchesNewObservation types.Bool `tfsdk:"propagate_branches_new_observation"`
 }
 
 // PropagateBranchModel is one branch propagation rule.
 type PropagateBranchModel struct {
 	PropagateTo types.String `tfsdk:"propagate_to"`
+}
+
+// PropagateBranchObjectType is PropagateBranchModel's object type, needed to
+// build/inspect PropagateBranches without a known Go slice on hand.
+var PropagateBranchObjectType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{"propagate_to": types.StringType},
 }
 
 // AddBranchPropagation contributes the branch propagation attributes.
@@ -65,9 +81,14 @@ func AddBranchPropagation(attributes map[string]schema.Attribute) {
 }
 
 // ValidateBranchPropagation rejects an empty list, which SecObserve would
-// normalize to null and thereby cause a permanent diff.
+// normalize to null and thereby cause a permanent diff. Unknown is left
+// alone: the eventual value isn't known yet, so there's nothing to validate
+// until a later plan resolves it.
 func (b BranchPropagation) ValidateBranchPropagation(diags *diag.Diagnostics) {
-	if b.PropagateBranches != nil && len(b.PropagateBranches) == 0 {
+	if b.PropagateBranches.IsNull() || b.PropagateBranches.IsUnknown() {
+		return
+	}
+	if len(b.PropagateBranches.Elements()) == 0 {
 		diags.AddAttributeError(
 			path.Root("propagate_branches"),
 			"Empty propagate_branches list",
@@ -78,12 +99,21 @@ func (b BranchPropagation) ValidateBranchPropagation(diags *diag.Diagnostics) {
 }
 
 // ToAPI converts the block into its request representation.
-func (b BranchPropagation) ToAPI() client.BranchPropagationFields {
+func (b BranchPropagation) ToAPI(ctx context.Context, diags *diag.Diagnostics) client.BranchPropagationFields {
 	fields := client.BranchPropagationFields{
 		PropagateBranchesNewAssessment:  tfutil.BoolValue(b.PropagateBranchesNewAssessment),
 		PropagateBranchesNewObservation: tfutil.BoolValue(b.PropagateBranchesNewObservation),
 	}
-	for _, rule := range b.PropagateBranches {
+	if b.PropagateBranches.IsNull() || b.PropagateBranches.IsUnknown() {
+		return fields
+	}
+
+	var rules []PropagateBranchModel
+	diags.Append(b.PropagateBranches.ElementsAs(ctx, &rules, false)...)
+	if diags.HasError() {
+		return fields
+	}
+	for _, rule := range rules {
 		fields.PropagateBranches = append(fields.PropagateBranches, client.PropagateBranch{
 			PropagateTo: rule.PropagateTo.ValueString(),
 		})
@@ -92,19 +122,23 @@ func (b BranchPropagation) ToAPI() client.BranchPropagationFields {
 }
 
 // FromAPI fills the block from an API response.
-func (b *BranchPropagation) FromAPI(_ context.Context, fields client.BranchPropagationFields) {
+func (b *BranchPropagation) FromAPI(
+	ctx context.Context, fields client.BranchPropagationFields, diags *diag.Diagnostics,
+) {
 	b.PropagateBranchesNewAssessment = types.BoolValue(fields.PropagateBranchesNewAssessment)
 	b.PropagateBranchesNewObservation = types.BoolValue(fields.PropagateBranchesNewObservation)
 
 	// Null and [] are the same thing here, and null is what SecObserve stores.
 	if len(fields.PropagateBranches) == 0 {
-		b.PropagateBranches = nil
+		b.PropagateBranches = types.ListNull(PropagateBranchObjectType)
 		return
 	}
-	b.PropagateBranches = make([]PropagateBranchModel, 0, len(fields.PropagateBranches))
+
+	rules := make([]PropagateBranchModel, 0, len(fields.PropagateBranches))
 	for _, rule := range fields.PropagateBranches {
-		b.PropagateBranches = append(b.PropagateBranches, PropagateBranchModel{
-			PropagateTo: types.StringValue(rule.PropagateTo),
-		})
+		rules = append(rules, PropagateBranchModel{PropagateTo: types.StringValue(rule.PropagateTo)})
 	}
+	list, d := types.ListValueFrom(ctx, PropagateBranchObjectType, rules)
+	diags.Append(d...)
+	b.PropagateBranches = list
 }

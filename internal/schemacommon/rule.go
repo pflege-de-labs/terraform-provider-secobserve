@@ -1,8 +1,11 @@
 package schemacommon
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -37,10 +40,13 @@ type RuleFields struct {
 	OriginCloudQualifiedResource      types.String `tfsdk:"origin_cloud_qualified_resource"`
 	OriginKubernetesQualifiedResource types.String `tfsdk:"origin_kubernetes_qualified_resource"`
 
-	NewSeverity         types.String          `tfsdk:"new_severity"`
-	NewStatus           types.String          `tfsdk:"new_status"`
-	NewVEXJustification types.String          `tfsdk:"new_vex_justification"`
-	NewVEXRemediations  []VEXRemediationModel `tfsdk:"new_vex_remediations"`
+	NewSeverity         types.String `tfsdk:"new_severity"`
+	NewStatus           types.String `tfsdk:"new_status"`
+	NewVEXJustification types.String `tfsdk:"new_vex_justification"`
+
+	// types.List, not a plain Go slice: see BranchPropagation.PropagateBranches
+	// in branch_propagation.go for why.
+	NewVEXRemediations types.List `tfsdk:"new_vex_remediations"`
 
 	RegoModule types.String `tfsdk:"rego_module"`
 
@@ -51,6 +57,15 @@ type RuleFields struct {
 type VEXRemediationModel struct {
 	Category types.String `tfsdk:"category"`
 	Text     types.String `tfsdk:"text"`
+}
+
+// VEXRemediationObjectType is VEXRemediationModel's object type, needed to
+// build/inspect NewVEXRemediations without a known Go slice on hand.
+var VEXRemediationObjectType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"category": types.StringType,
+		"text":     types.StringType,
+	},
 }
 
 // AddRuleFields contributes the attributes shared by general and product
@@ -192,7 +207,7 @@ func (r RuleFields) ValidateRuleFields(diags *diag.Diagnostics) {
 		)
 	}
 
-	if r.NewVEXRemediations != nil && len(r.NewVEXRemediations) == 0 {
+	if !r.NewVEXRemediations.IsNull() && !r.NewVEXRemediations.IsUnknown() && len(r.NewVEXRemediations.Elements()) == 0 {
 		diags.AddAttributeError(
 			path.Root("new_vex_remediations"),
 			"Empty new_vex_remediations list",
@@ -203,7 +218,7 @@ func (r RuleFields) ValidateRuleFields(diags *diag.Diagnostics) {
 }
 
 // ToAPI converts the block into its request representation.
-func (r RuleFields) ToAPI() client.RuleFields {
+func (r RuleFields) ToAPI(ctx context.Context, diags *diag.Diagnostics) client.RuleFields {
 	fields := client.RuleFields{
 		Name:                              r.Name.ValueString(),
 		Description:                       r.Description.ValueString(),
@@ -226,17 +241,21 @@ func (r RuleFields) ToAPI() client.RuleFields {
 		RegoModule:                        tfutil.StringValue(r.RegoModule),
 		Enabled:                           tfutil.BoolValue(r.Enabled),
 	}
-	for _, remediation := range r.NewVEXRemediations {
-		fields.NewVEXRemediations = append(fields.NewVEXRemediations, client.VEXRemediation{
-			Category: remediation.Category.ValueString(),
-			Text:     remediation.Text.ValueString(),
-		})
+	if !r.NewVEXRemediations.IsNull() && !r.NewVEXRemediations.IsUnknown() {
+		var remediations []VEXRemediationModel
+		diags.Append(r.NewVEXRemediations.ElementsAs(ctx, &remediations, false)...)
+		for _, remediation := range remediations {
+			fields.NewVEXRemediations = append(fields.NewVEXRemediations, client.VEXRemediation{
+				Category: remediation.Category.ValueString(),
+				Text:     remediation.Text.ValueString(),
+			})
+		}
 	}
 	return fields
 }
 
 // FromAPI fills the block from an API response.
-func (r *RuleFields) FromAPI(fields client.RuleFields) {
+func (r *RuleFields) FromAPI(ctx context.Context, fields client.RuleFields, diags *diag.Diagnostics) {
 	r.Name = types.StringValue(fields.Name)
 	r.Description = types.StringValue(fields.Description)
 	r.Type = types.StringValue(fields.Type)
@@ -260,16 +279,19 @@ func (r *RuleFields) FromAPI(fields client.RuleFields) {
 
 	// Null and [] are the same thing here, and null is what SecObserve stores.
 	if len(fields.NewVEXRemediations) == 0 {
-		r.NewVEXRemediations = nil
-	} else {
-		r.NewVEXRemediations = make([]VEXRemediationModel, 0, len(fields.NewVEXRemediations))
-		for _, remediation := range fields.NewVEXRemediations {
-			r.NewVEXRemediations = append(r.NewVEXRemediations, VEXRemediationModel{
-				Category: types.StringValue(remediation.Category),
-				Text:     types.StringValue(remediation.Text),
-			})
-		}
+		r.NewVEXRemediations = types.ListNull(VEXRemediationObjectType)
+		return
 	}
+	remediations := make([]VEXRemediationModel, 0, len(fields.NewVEXRemediations))
+	for _, remediation := range fields.NewVEXRemediations {
+		remediations = append(remediations, VEXRemediationModel{
+			Category: types.StringValue(remediation.Category),
+			Text:     types.StringValue(remediation.Text),
+		})
+	}
+	list, d := types.ListValueFrom(ctx, VEXRemediationObjectType, remediations)
+	diags.Append(d...)
+	r.NewVEXRemediations = list
 }
 
 // RuleApproval is the Computed-only approval workflow block, identical for

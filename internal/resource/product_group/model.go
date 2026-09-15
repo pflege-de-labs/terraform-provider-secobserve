@@ -39,7 +39,7 @@ func (m model) toRequest(ctx context.Context, diags *diag.Diagnostics) client.Pr
 		ApproverFields:           m.Approvers.ToAPI(ctx, diags),
 		RiskAcceptanceFields:     m.RiskAcceptance.ToAPI(),
 		LicensePolicyFields:      m.LicensePolicy.ToAPI(),
-		BranchPropagationFields:  m.BranchPropagation.ToAPI(),
+		BranchPropagationFields:  m.BranchPropagation.ToAPI(ctx, diags),
 	}
 }
 
@@ -55,5 +55,5 @@ func (m *model) fromAPI(ctx context.Context, group client.Product, diags *diag.D
 	m.Approvers.FromAPI(ctx, group.ApproverFields, diags)
 	m.RiskAcceptance.FromAPI(group.RiskAcceptanceFields)
 	m.LicensePolicy.FromAPI(group.LicensePolicyFields)
-	m.BranchPropagation.FromAPI(ctx, group.BranchPropagationFields)
+	m.BranchPropagation.FromAPI(ctx, group.BranchPropagationFields, diags)
 }
