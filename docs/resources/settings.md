@@ -110,3 +110,25 @@ resource "secobserve_settings" "this" {
 ### Read-Only
 
 - `id` (Number) Always `1`: SecObserve keeps exactly one settings record and the API hardcodes its id.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# Settings is a singleton -- any id works.
+import {
+  to = secobserve_settings.this
+  id = "1"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Settings is a singleton -- any id works, the resource always targets the
+# single settings record.
+terraform import secobserve_settings.this 1
+```

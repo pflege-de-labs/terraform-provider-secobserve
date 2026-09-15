@@ -14,6 +14,7 @@ import (
 var (
 	_ resource.ResourceWithConfigure      = (*settingsResource)(nil)
 	_ resource.ResourceWithValidateConfig = (*settingsResource)(nil)
+	_ resource.ResourceWithImportState    = (*settingsResource)(nil)
 )
 
 // New returns the secobserve_settings resource.

@@ -61,3 +61,25 @@ resource "secobserve_product" "checkout" {
 - `is_manager` (Boolean) Whether the provider's identity is an explicit manager member of this policy. A superuser can write this resource regardless of this flag, so it reads `false` for a superuser-created policy with no membership rows of its own.
 - `is_parent` (Boolean) Whether at least one other policy has this one as its parent.
 - `parent_name` (String) Name of the parent policy, or empty if there is none.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# The exact name also works as the id.
+import {
+  to = secobserve_license_policy.default
+  id = "2"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Either the numeric id or the exact name works.
+terraform import secobserve_license_policy.default 2
+terraform import secobserve_license_policy.default "Company default"
+```

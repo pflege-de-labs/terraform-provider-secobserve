@@ -135,3 +135,27 @@ Only meaningful while `security_gate_active` is `true`; SecObserve clears it oth
 Required:
 
 - `propagate_to` (String) Regular expression matching the branch names to propagate to.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# The exact name also works as the id (products and product groups share
+# one name space).
+import {
+  to = secobserve_product_group.payments
+  id = "5"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Either the numeric id or the exact name works. Products and product groups
+# share one name space, so a name identifies at most one of either.
+terraform import secobserve_product_group.payments 5
+terraform import secobserve_product_group.payments "Payments"
+```

@@ -52,3 +52,23 @@ resource "secobserve_product" "with_approvers" {
 ### Read-Only
 
 - `id` (Number) Numeric id of the membership.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+import {
+  to = secobserve_product_authorization_group_member.platform_team
+  id = "12/3"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# <product id>/<authorization group id>.
+terraform import secobserve_product_authorization_group_member.platform_team "12/3"
+```

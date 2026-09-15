@@ -61,3 +61,25 @@ resource "secobserve_license_group" "permissive" {
 - `id` (Number) Numeric id of the license group.
 - `is_in_license_policy` (Boolean) Whether any license policy item references this group.
 - `is_manager` (Boolean) Whether the provider's identity is an explicit manager member of this group. A superuser can write this resource regardless of this flag, so it reads `false` for a superuser-created group with no membership rows of its own.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# The exact name also works as the id.
+import {
+  to = secobserve_license_group.permissive
+  id = "4"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Either the numeric id or the exact name works.
+terraform import secobserve_license_group.permissive 4
+terraform import secobserve_license_group.permissive "Permissive (approved)"
+```

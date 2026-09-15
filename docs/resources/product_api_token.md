@@ -54,3 +54,27 @@ output "ci_token" {
 - `token` (String, Sensitive) The token value, for use as `Authorization: APIToken <token>`.
 
 ~> SecObserve returns this **once**, when the token is created, and offers no way to read it back. It is kept in Terraform state; losing the state means recreating the token. Imported tokens have this attribute unset for the same reason.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# The secret is unrecoverable on import -- see import.sh for why.
+import {
+  to = secobserve_product_api_token.ci
+  id = "12/ci"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# <product id>/<token name>. The secret is unrecoverable: SecObserve returns
+# it only once, in the create response, and never again. Import populates
+# every other attribute and leaves `token` null; the provider warns about
+# this on import.
+terraform import secobserve_product_api_token.ci "12/ci"
+```

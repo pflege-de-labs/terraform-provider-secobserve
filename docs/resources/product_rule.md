@@ -82,3 +82,24 @@ Required:
 
 - `category` (String) Remediation category.
 - `text` (String) Remediation text.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+import {
+  to = secobserve_product_rule.suppress_scanner_false_positive
+  id = "12/Suppress known scanner false positive"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# <product id>/<rule name>. Unlike general rule names, product rule names
+# are genuinely unique per product.
+terraform import secobserve_product_rule.suppress_scanner_false_positive "12/Suppress known scanner false positive"
+```

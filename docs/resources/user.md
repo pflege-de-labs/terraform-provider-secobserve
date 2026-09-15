@@ -61,3 +61,25 @@ data "secobserve_user" "alice" {
 
 - `id` (Number) Numeric id of the user.
 - `is_oidc_user` (Boolean) Whether SecObserve considers this an OIDC-provisioned user. Read-only: set by SecObserve itself on first OIDC login, never by this resource.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# The exact username also works as the id.
+import {
+  to = secobserve_user.ci_bot
+  id = "7"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Either the numeric id or the exact username works.
+terraform import secobserve_user.ci_bot 7
+terraform import secobserve_user.ci_bot "ci-bot"
+```

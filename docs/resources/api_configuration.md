@@ -63,3 +63,25 @@ resource "secobserve_api_configuration" "trivy_import" {
 ### Read-Only
 
 - `id` (Number) Numeric id of the configuration.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+import {
+  to = secobserve_api_configuration.trivy_import
+  id = "12/Trivy scan import"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# <product id>/<configuration name>. test_connection is never populated on
+# import: it is write-only, ephemeral state the API never returns. api_key
+# does round-trip for a superuser token.
+terraform import secobserve_api_configuration.trivy_import "12/Trivy scan import"
+```
