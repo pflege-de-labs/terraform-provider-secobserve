@@ -260,6 +260,80 @@ resource "secobserve_product" "test" {
 	})
 }
 
+// Reported: updating an existing product/product group whose state has a
+// fully-populated block (active + every threshold, left over from an older
+// provider version where these were Computed and tracked, or from a
+// config that has since been narrowed) to a config that only sets a couple
+// of thresholds shows a plan clearing the rest. That is a real, expected,
+// ONE-TIME diff -- state catches up to exactly match config, since state is
+// echoed from config/plan and never read back from the response (see
+// plan_modifiers.go's doc comment). It must converge: the plan after that
+// apply has to be empty, not keep re-proposing the same clear forever.
+func TestProductSecurityGateAndHousekeepingShrinkConverges(t *testing.T) {
+	newStubSecObserve(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Simulates pre-existing state with every field populated.
+				Config: `
+resource "secobserve_product" "test" {
+  name = "shrink"
+  security_gate {
+    active             = true
+    threshold_critical = 1
+    threshold_high     = 5
+    threshold_medium   = 99999
+    threshold_low      = 99999
+    threshold_none     = 99999
+    threshold_unknown  = 99999
+  }
+  repository_branch_housekeeping {
+    active             = true
+    keep_inactive_days = 60
+    exempt_branches    = "^(main|release/.*)$"
+  }
+}`,
+			},
+			{
+				// Narrower config, matching what was actually reported.
+				Config: `
+resource "secobserve_product" "test" {
+  name = "shrink"
+  security_gate {
+    threshold_critical = 1
+    threshold_high     = 5
+  }
+  repository_branch_housekeeping {
+    keep_inactive_days = 60
+    exempt_branches    = "^(main|release/.*)$"
+  }
+}`,
+			},
+			{
+				// Same config again: must be a stable, empty plan.
+				Config: `
+resource "secobserve_product" "test" {
+  name = "shrink"
+  security_gate {
+    threshold_critical = 1
+    threshold_high     = 5
+  }
+  repository_branch_housekeeping {
+    keep_inactive_days = 60
+    exempt_branches    = "^(main|release/.*)$"
+  }
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 // Omitting security_gate/repository_branch_housekeeping entirely must send
 // null so SecObserve keeps inheriting, rather than sending false and pinning
 // the value.

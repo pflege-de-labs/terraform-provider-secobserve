@@ -88,7 +88,9 @@ SecObserve clears both other fields server-side whenever housekeeping ends up in
 
 Leave a field unset to inherit the instance-wide default -- the default is not reflected back into this block, matching the rest of this provider's read-only/informational data being reserved for data sources.
 
-~> Unlike every other attribute in this provider, this block's state is echoed from your configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot recover a configured housekeeping setup (add the block to your configuration afterwards to match what's actually configured), and changing it directly in SecObserve rather than through Terraform will not be detected as drift. (see [below for nested schema](#nestedblock--repository_branch_housekeeping))
+~> Unlike every other attribute in this provider, this block's state is echoed from your configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot recover a configured housekeeping setup (add the block to your configuration afterwards to match what's actually configured), and changing it directly in SecObserve rather than through Terraform will not be detected as drift.
+
+~> If this attribute previously tracked values it no longer does -- narrowing the block, or upgrading from a provider version where these fields were server-computed -- the next plan clears them from state. This is safe and happens once: housekeeping stays active and SecObserve still fills unset fields with its own defaults server-side, only Terraform's state stops tracking values your configuration never asked for. The plan is empty again immediately after. (see [below for nested schema](#nestedblock--repository_branch_housekeeping))
 - `risk_acceptance_expiry_active` (Boolean) Whether accepted risks expire automatically.
 
 Tri-state: leave it unset to inherit from the product group or, failing that, from the instance settings. That is different from `false`, which disables expiry explicitly.
@@ -99,7 +101,9 @@ SecObserve clears every threshold server-side whenever the gate ends up inactive
 
 Leave a threshold unset to inherit the instance-wide default for that severity -- the default is not reflected back into this block, matching the rest of this provider's read-only/informational data being reserved for data sources.
 
-~> Unlike every other attribute in this provider, this block's state is echoed from your configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot recover a configured gate (add the block to your configuration afterwards to match what's actually configured), and changing it directly in SecObserve rather than through Terraform will not be detected as drift. (see [below for nested schema](#nestedblock--security_gate))
+~> Unlike every other attribute in this provider, this block's state is echoed from your configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot recover a configured gate (add the block to your configuration afterwards to match what's actually configured), and changing it directly in SecObserve rather than through Terraform will not be detected as drift.
+
+~> If this attribute previously tracked values it no longer does -- narrowing the block, or upgrading from a provider version where these fields were server-computed -- the next plan clears them from state. This is safe and happens once: the gate stays active and SecObserve still fills unset thresholds with its own defaults server-side, only Terraform's state stops tracking values your configuration never asked for. The plan is empty again immediately after. (see [below for nested schema](#nestedblock--security_gate))
 
 ### Read-Only
 

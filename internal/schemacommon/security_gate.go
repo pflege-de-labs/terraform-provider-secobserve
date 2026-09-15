@@ -93,7 +93,12 @@ func AddSecurityGate(blocks map[string]schema.Block) {
 			"configuration rather than read back from SecObserve. Two consequences: `terraform import` cannot " +
 			"recover a configured gate (add the block to your configuration afterwards to match what's " +
 			"actually configured), and changing it directly in SecObserve rather than through Terraform will " +
-			"not be detected as drift.",
+			"not be detected as drift.\n\n" +
+			"~> If this attribute previously tracked values it no longer does -- narrowing the block, or " +
+			"upgrading from a provider version where these fields were server-computed -- the next plan clears " +
+			"them from state. This is safe and happens once: the gate stays active and SecObserve still fills " +
+			"unset thresholds with its own defaults server-side, only Terraform's state stops tracking values " +
+			"your configuration never asked for. The plan is empty again immediately after.",
 	}
 }
 
