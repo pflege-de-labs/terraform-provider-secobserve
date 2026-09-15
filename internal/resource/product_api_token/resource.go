@@ -103,7 +103,12 @@ func (r *tokenResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 		MarkdownDescription: "An API token scoped to a single product, for use by CI/CD pipelines uploading " +
 			"scan results.\n\n" +
 			"The endpoint supports only create, list and delete, so **any change replaces the token** and " +
-			"issues a new secret. Consumers of the old value have to be updated.",
+			"issues a new secret. Consumers of the old value have to be updated.\n\n" +
+			"~> For blue/green rotation without a gap where no valid token exists, set " +
+			"`lifecycle { create_before_destroy = true }` and change `name` on rotation (it's unique per " +
+			"product, but SecObserve allows multiple tokens on the same product at once, so the new token " +
+			"is created before the old one is destroyed). See `examples/resources/secobserve_product_api_token/" +
+			"rotation.tf` for a worked example using the `time_rotating` resource to automate it.",
 		Attributes: attributes,
 	}
 }
