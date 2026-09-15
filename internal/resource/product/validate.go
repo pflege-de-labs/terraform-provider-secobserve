@@ -24,6 +24,7 @@ func (r *productResource) ValidateConfig(
 	}
 
 	config.SecurityGate.ValidateSecurityGate(&resp.Diagnostics)
+	config.BranchHousekeeping.ValidateBranchHousekeeping(&resp.Diagnostics)
 	config.BranchPropagation.ValidateBranchPropagation(&resp.Diagnostics)
 	config.validateIssueTracker(&resp.Diagnostics)
 	config.validateScanners(&resp.Diagnostics)

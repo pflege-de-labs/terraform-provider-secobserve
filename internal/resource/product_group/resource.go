@@ -36,6 +36,7 @@ func (r *productGroupResource) ValidateConfig(
 		return
 	}
 	config.SecurityGate.ValidateSecurityGate(&resp.Diagnostics)
+	config.BranchHousekeeping.ValidateBranchHousekeeping(&resp.Diagnostics)
 	config.BranchPropagation.ValidateBranchPropagation(&resp.Diagnostics)
 }
 

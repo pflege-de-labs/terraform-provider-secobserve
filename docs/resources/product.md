@@ -120,9 +120,13 @@ Note that `None` is a severity level in SecObserve, not the absence of one.
 
 Tri-state: leave it unset to inherit from the product group or, failing that, from the instance settings. That is different from `false`, which disables housekeeping explicitly.
 
-Setting it to `false` also clears `repository_branch_housekeeping_keep_inactive_days` and `repository_branch_housekeeping_exempt_branches` server-side.
+Setting it to `false` also clears `repository_branch_housekeeping_keep_inactive_days` and `repository_branch_housekeeping_exempt_branches` server-side -- both are rejected at plan time if set explicitly alongside `false`.
 - `repository_branch_housekeeping_exempt_branches` (String) Regular expression matching branch names that housekeeping must never delete.
+
+~> Cannot be set while `repository_branch_housekeeping_active` is explicitly `false`.
 - `repository_branch_housekeeping_keep_inactive_days` (Number) Days a branch may stay inactive before housekeeping deletes it. Leave it unset to inherit the instance-wide default.
+
+~> Cannot be set while `repository_branch_housekeeping_active` is explicitly `false`.
 - `repository_prefix` (String) Base URL of the source repository, used to build links to source files.
 - `risk_acceptance_expiry_active` (Boolean) Whether accepted risks expire automatically.
 
@@ -132,37 +136,49 @@ Tri-state: leave it unset to inherit from the product group or, failing that, fr
 
 Tri-state: leave it unset to inherit from the product group or, failing that, from the instance settings. That is different from `false`, which switches the gate off explicitly.
 
-Setting it to `false` also clears every `security_gate_threshold_*` attribute server-side.
+Setting it to `false` also clears every `security_gate_threshold_*` attribute server-side -- each is rejected at plan time if set explicitly alongside `false`.
 - `security_gate_threshold_critical` (Number) Maximum number of active critical severity observations tolerated before the security gate fails.
 
 Only meaningful while `security_gate_active` is `true`; SecObserve clears it otherwise. Leave it unset to inherit the instance-wide default.
 
 ~> A value of `0` is rejected. SecObserve treats it as "not set" and substitutes the instance-wide default whenever the gate is active, so it would never take effect. Use a large value such as `99999` to ignore a severity.
+
+~> Cannot be set while `security_gate_active` is explicitly `false`.
 - `security_gate_threshold_high` (Number) Maximum number of active high severity observations tolerated before the security gate fails.
 
 Only meaningful while `security_gate_active` is `true`; SecObserve clears it otherwise. Leave it unset to inherit the instance-wide default.
 
 ~> A value of `0` is rejected. SecObserve treats it as "not set" and substitutes the instance-wide default whenever the gate is active, so it would never take effect. Use a large value such as `99999` to ignore a severity.
+
+~> Cannot be set while `security_gate_active` is explicitly `false`.
 - `security_gate_threshold_low` (Number) Maximum number of active low severity observations tolerated before the security gate fails.
 
 Only meaningful while `security_gate_active` is `true`; SecObserve clears it otherwise. Leave it unset to inherit the instance-wide default.
 
 ~> A value of `0` is rejected. SecObserve treats it as "not set" and substitutes the instance-wide default whenever the gate is active, so it would never take effect. Use a large value such as `99999` to ignore a severity.
+
+~> Cannot be set while `security_gate_active` is explicitly `false`.
 - `security_gate_threshold_medium` (Number) Maximum number of active medium severity observations tolerated before the security gate fails.
 
 Only meaningful while `security_gate_active` is `true`; SecObserve clears it otherwise. Leave it unset to inherit the instance-wide default.
 
 ~> A value of `0` is rejected. SecObserve treats it as "not set" and substitutes the instance-wide default whenever the gate is active, so it would never take effect. Use a large value such as `99999` to ignore a severity.
+
+~> Cannot be set while `security_gate_active` is explicitly `false`.
 - `security_gate_threshold_none` (Number) Maximum number of active `None` severity observations tolerated before the security gate fails.
 
 Only meaningful while `security_gate_active` is `true`; SecObserve clears it otherwise. Leave it unset to inherit the instance-wide default.
 
 ~> A value of `0` is rejected. SecObserve treats it as "not set" and substitutes the instance-wide default whenever the gate is active, so it would never take effect. Use a large value such as `99999` to ignore a severity.
+
+~> Cannot be set while `security_gate_active` is explicitly `false`.
 - `security_gate_threshold_unknown` (Number) Maximum number of active unknown severity observations tolerated before the security gate fails.
 
 Only meaningful while `security_gate_active` is `true`; SecObserve clears it otherwise. Leave it unset to inherit the instance-wide default.
 
 ~> A value of `0` is rejected. SecObserve treats it as "not set" and substitutes the instance-wide default whenever the gate is active, so it would never take effect. Use a large value such as `99999` to ignore a severity.
+
+~> Cannot be set while `security_gate_active` is explicitly `false`.
 - `vulnerablecode_enabled` (Boolean) Whether this product may be scanned against VulnerableCode.
 
 ### Read-Only

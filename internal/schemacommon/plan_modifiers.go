@@ -63,6 +63,46 @@ func (m int64UnknownWhenBoolSiblingChanges) PlanModifyInt64(
 	}
 }
 
+// StringUnknownWhenBoolSiblingChanges plans a string attribute as unknown
+// while it is unset and the named bool attribute is changing.
+func StringUnknownWhenBoolSiblingChanges(sibling string) planmodifier.String {
+	return stringUnknownWhenBoolSiblingChanges{sibling: sibling}
+}
+
+type stringUnknownWhenBoolSiblingChanges struct {
+	sibling string
+}
+
+func (m stringUnknownWhenBoolSiblingChanges) Description(context.Context) string {
+	return "planned as unknown while unset and " + m.sibling + " changes, because SecObserve recomputes it"
+}
+
+func (m stringUnknownWhenBoolSiblingChanges) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m stringUnknownWhenBoolSiblingChanges) PlanModifyString(
+	ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse,
+) {
+	// A destroy plan is null throughout; on create the attribute is unknown
+	// already; a configured value must be honoured as written.
+	if req.Plan.Raw.IsNull() || req.State.Raw.IsNull() || !req.ConfigValue.IsNull() {
+		return
+	}
+
+	var fromState, fromPlan types.Bool
+	if diags := req.State.GetAttribute(ctx, path.Root(m.sibling), &fromState); diags.HasError() {
+		return
+	}
+	if diags := req.Plan.GetAttribute(ctx, path.Root(m.sibling), &fromPlan); diags.HasError() {
+		return
+	}
+
+	if !fromState.Equal(fromPlan) {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // StringUnknownWhenStringSiblingChanges plans a string attribute as unknown
 // while it is unset and the named string attribute is changing.
 func StringUnknownWhenStringSiblingChanges(sibling string) planmodifier.String {

@@ -31,7 +31,8 @@ const thresholdDescription = "Maximum number of active %s observations tolerated
 	"inherit the instance-wide default.\n\n" +
 	"~> A value of `0` is rejected. SecObserve treats it as \"not set\" and substitutes the instance-wide " +
 	"default whenever the gate is active, so it would never take effect. Use a large value such as `99999` " +
-	"to ignore a severity."
+	"to ignore a severity.\n\n" +
+	"~> Cannot be set while `security_gate_active` is explicitly `false`."
 
 // thresholdSeverities maps each threshold attribute to the wording used in its
 // description. Ordered so the generated documentation reads high to low.
@@ -54,7 +55,8 @@ func AddSecurityGate(attributes map[string]schema.Attribute) {
 		MarkdownDescription: "Whether the security gate is evaluated.\n\n" +
 			"Tri-state: leave it unset to inherit from the product group or, failing that, from the instance " +
 			"settings. That is different from `false`, which switches the gate off explicitly.\n\n" +
-			"Setting it to `false` also clears every `security_gate_threshold_*` attribute server-side.",
+			"Setting it to `false` also clears every `security_gate_threshold_*` attribute server-side -- " +
+			"each is rejected at plan time if set explicitly alongside `false`.",
 	}
 
 	for _, threshold := range thresholdSeverities {
@@ -131,6 +133,26 @@ func (s SecurityGate) ValidateSecurityGate(diags *diag.Diagnostics) {
 				"To fail the gate on any observation of this severity, leave the attribute unset and "+
 				"configure the instance-wide default instead. To ignore this severity, use a large value "+
 				"such as 99999.",
+		)
+	}
+
+	active := s.SecurityGateActive
+	if active.IsUnknown() || active.IsNull() || active.ValueBool() {
+		// Only an explicit, known false triggers SecObserve's unconditional
+		// clear of every threshold; null (inherit) and true leave them alone.
+		return
+	}
+
+	for _, threshold := range thresholds {
+		if threshold.value.IsNull() || threshold.value.IsUnknown() {
+			continue
+		}
+		diags.AddAttributeError(
+			path.Root(threshold.attribute),
+			"Cannot be set while the security gate is inactive",
+			"SecObserve clears every security_gate_threshold_* attribute server-side whenever "+
+				"security_gate_active is false, regardless of what is configured here.\n\n"+
+				"Remove this attribute, or set security_gate_active to true or leave it unset.",
 		)
 	}
 }
