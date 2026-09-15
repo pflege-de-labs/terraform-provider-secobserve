@@ -60,3 +60,23 @@ Setting it also updates the product's read-only `repository_default_branch` and 
 - `id` (Number) Numeric id of the branch.
 - `last_import` (String) When observations were last imported for this branch.
 - `name_with_product` (String) Branch name qualified with its product, as SecObserve displays it.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+import {
+  to = secobserve_branch.main
+  id = "12/main"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Branch names are only unique within a product, so import needs both ids.
+terraform import secobserve_branch.main "12/main"
+```

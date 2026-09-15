@@ -59,3 +59,23 @@ Exactly one of the four match fields.
 - `id` (Number) Numeric id of the item.
 - `license_group_name` (String) Name of `license_group`, or empty if this item does not match on a license group.
 - `license_spdx_id` (String) SPDX id of `license`, or empty if this item does not match on a single license.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+import {
+  to = secobserve_license_policy_item.allow_permissive
+  id = "15"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Numeric id only: an item has no unique name to import by.
+terraform import secobserve_license_policy_item.allow_permissive 15
+```

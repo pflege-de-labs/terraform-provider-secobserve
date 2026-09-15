@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccUserLifecycle(t *testing.T) {
@@ -126,8 +127,24 @@ resource "secobserve_authorization_group_member" "test" {
 				Check: resource.TestCheckResourceAttr(
 					"secobserve_authorization_group_member.test", "is_manager", "true"),
 			},
+			{
+				ResourceName:      "secobserve_authorization_group_member.test",
+				ImportStateIdFunc: authorizationGroupMemberImportID,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
+}
+
+// authorizationGroupMemberImportID builds the
+// "<authorization group id>/<user id>" import id from state.
+func authorizationGroupMemberImportID(s *terraform.State) (string, error) {
+	member, ok := s.RootModule().Resources["secobserve_authorization_group_member.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_authorization_group_member.test not found in state")
+	}
+	return fmt.Sprintf("%s/%s", member.Primary.Attributes["authorization_group"], member.Primary.Attributes["user"]), nil
 }
 
 // Setting oidc_group on the referenced group has to produce a warning; the

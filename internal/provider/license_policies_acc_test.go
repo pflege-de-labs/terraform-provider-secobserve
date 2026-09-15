@@ -259,8 +259,24 @@ resource "secobserve_license_policy_authorization_group_member" "test" {
 				Check: resource.TestCheckResourceAttr(
 					"secobserve_license_policy_authorization_group_member.test", "is_manager", "true"),
 			},
+			{
+				ResourceName:      "secobserve_license_policy_authorization_group_member.test",
+				ImportStateIdFunc: licensePolicyAuthorizationGroupMemberImportID,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
+}
+
+// licensePolicyAuthorizationGroupMemberImportID builds the
+// "<license policy id>/<authorization group id>" import id from state.
+func licensePolicyAuthorizationGroupMemberImportID(s *terraform.State) (string, error) {
+	member, ok := s.RootModule().Resources["secobserve_license_policy_authorization_group_member.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_license_policy_authorization_group_member.test not found in state")
+	}
+	return fmt.Sprintf("%s/%s", member.Primary.Attributes["license_policy"], member.Primary.Attributes["authorization_group"]), nil
 }
 
 // TestAccLicensePolicyDataSource does not rely on the seeded "Standard"

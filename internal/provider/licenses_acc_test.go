@@ -144,8 +144,24 @@ resource "secobserve_license_group_authorization_group_member" "test" {
 				Check: resource.TestCheckResourceAttr(
 					"secobserve_license_group_authorization_group_member.test", "is_manager", "true"),
 			},
+			{
+				ResourceName:      "secobserve_license_group_authorization_group_member.test",
+				ImportStateIdFunc: licenseGroupAuthorizationGroupMemberImportID,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
+}
+
+// licenseGroupAuthorizationGroupMemberImportID builds the
+// "<license group id>/<authorization group id>" import id from state.
+func licenseGroupAuthorizationGroupMemberImportID(s *terraform.State) (string, error) {
+	member, ok := s.RootModule().Resources["secobserve_license_group_authorization_group_member.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_license_group_authorization_group_member.test not found in state")
+	}
+	return fmt.Sprintf("%s/%s", member.Primary.Attributes["license_group"], member.Primary.Attributes["authorization_group"]), nil
 }
 
 func licenseGroupMemberImportID(s *terraform.State) (string, error) {

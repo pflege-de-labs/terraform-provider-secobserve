@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // These run against a real SecObserve: `make up && eval "$(./test/bootstrap.sh)"`.
@@ -263,8 +264,24 @@ resource "secobserve_branch" "test" {
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 			},
+			{
+				ResourceName:      "secobserve_branch.test",
+				ImportStateIdFunc: branchImportID,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
+}
+
+// branchImportID builds the "<product id>/<branch name>" import id from
+// state, since the product's id is only known post-apply.
+func branchImportID(s *terraform.State) (string, error) {
+	branch, ok := s.RootModule().Resources["secobserve_branch.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_branch.test not found in state")
+	}
+	return fmt.Sprintf("%s/%s", branch.Primary.Attributes["product"], branch.Primary.Attributes["name"]), nil
 }
 
 func TestAccServiceLifecycle(t *testing.T) {
@@ -287,8 +304,28 @@ resource "secobserve_service" "test" {
 				},
 				Check: resource.TestCheckResourceAttrSet("secobserve_service.test", "name_with_product"),
 			},
+			{
+				ResourceName:      "secobserve_service.test",
+				ImportStateIdFunc: serviceImportID,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
+}
+
+// serviceImportID builds the "<product id>/<service name>" import id from
+// state, since the product's id is only known post-apply.
+func serviceImportID(s *terraform.State) (string, error) {
+	product, ok := s.RootModule().Resources["secobserve_product.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_product.test not found in state")
+	}
+	service, ok := s.RootModule().Resources["secobserve_service.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_service.test not found in state")
+	}
+	return fmt.Sprintf("%s/%s", product.Primary.ID, service.Primary.Attributes["name"]), nil
 }
 
 // The provider takes a role name and sends the numeric value SecObserve
@@ -335,8 +372,27 @@ resource "secobserve_product_api_token" "test" {
 					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
 			},
+			{
+				// The secret is unrecoverable: SecObserve returns it only once,
+				// in the create response. Import populates everything else.
+				ResourceName:            "secobserve_product_api_token.test",
+				ImportStateIdFunc:       productAPITokenImportID,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"token"},
+			},
 		},
 	})
+}
+
+// productAPITokenImportID builds the "<product id>/<token name>" import id
+// from state, since the product's id is only known post-apply.
+func productAPITokenImportID(s *terraform.State) (string, error) {
+	token, ok := s.RootModule().Resources["secobserve_product_api_token.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_product_api_token.test not found in state")
+	}
+	return fmt.Sprintf("%s/%s", token.Primary.Attributes["product"], token.Primary.Attributes["name"]), nil
 }
 
 // An invalid role name has to fail at plan time: the API only range-checks
@@ -357,6 +413,97 @@ resource "secobserve_product_member" "test" {
 			},
 		},
 	})
+}
+
+// TestAccProductMemberLifecycle uses a dedicated secobserve_user rather than
+// the token's own identity: creating a product implicitly makes its creator
+// an Owner member (core/signals.py), so granting a role to that same
+// identity would fail as a duplicate.
+func TestAccProductMemberLifecycle(t *testing.T) {
+	product := acceptanceName("member-product")
+	username := acceptanceName("member-user")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "secobserve_product" "test" { name = %q }
+resource "secobserve_user" "test" { username = %q }
+
+resource "secobserve_product_member" "test" {
+  product = secobserve_product.test.id
+  user    = secobserve_user.test.id
+  role    = "Reader"
+}`, product, username),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.TestCheckResourceAttr("secobserve_product_member.test", "role", "Reader"),
+			},
+			{
+				ResourceName:      "secobserve_product_member.test",
+				ImportStateIdFunc: productMemberImportID,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// productMemberImportID builds the "<product id>/<user id>" import id from
+// state, since both ids are only known post-apply.
+func productMemberImportID(s *terraform.State) (string, error) {
+	member, ok := s.RootModule().Resources["secobserve_product_member.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_product_member.test not found in state")
+	}
+	return fmt.Sprintf("%s/%s", member.Primary.Attributes["product"], member.Primary.Attributes["user"]), nil
+}
+
+func TestAccProductAuthorizationGroupMemberLifecycle(t *testing.T) {
+	product := acceptanceName("pagm-product")
+	group := acceptanceName("pagm-group")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "secobserve_product" "test" { name = %q }
+resource "secobserve_authorization_group" "test" { name = %q }
+
+resource "secobserve_product_authorization_group_member" "test" {
+  product              = secobserve_product.test.id
+  authorization_group  = secobserve_authorization_group.test.id
+  role                 = "Reader"
+}`, product, group),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.TestCheckResourceAttr(
+					"secobserve_product_authorization_group_member.test", "role", "Reader"),
+			},
+			{
+				ResourceName:      "secobserve_product_authorization_group_member.test",
+				ImportStateIdFunc: productAuthorizationGroupMemberImportID,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// productAuthorizationGroupMemberImportID builds the
+// "<product id>/<authorization group id>" import id from state.
+func productAuthorizationGroupMemberImportID(s *terraform.State) (string, error) {
+	member, ok := s.RootModule().Resources["secobserve_product_authorization_group_member.test"]
+	if !ok {
+		return "", fmt.Errorf("secobserve_product_authorization_group_member.test not found in state")
+	}
+	return fmt.Sprintf("%s/%s", member.Primary.Attributes["product"], member.Primary.Attributes["authorization_group"]), nil
 }
 
 func TestAccProductDataSource(t *testing.T) {

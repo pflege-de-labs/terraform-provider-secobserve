@@ -181,3 +181,25 @@ Read-only: SecObserve sets it as a side effect of `is_default_branch` on a `seco
 Required:
 
 - `propagate_to` (String) Regular expression matching the branch names to propagate to.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# The exact product name also works as the id.
+import {
+  to = secobserve_product.checkout
+  id = "12"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Either the numeric id or the exact product name works.
+terraform import secobserve_product.checkout 12
+terraform import secobserve_product.checkout "checkout-service"
+```

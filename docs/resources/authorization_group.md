@@ -46,3 +46,25 @@ resource "secobserve_authorization_group" "security_team" {
 ### Read-Only
 
 - `id` (Number) Numeric id of the authorization group.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# The exact name also works as the id.
+import {
+  to = secobserve_authorization_group.platform_team
+  id = "3"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Either the numeric id or the exact name works.
+terraform import secobserve_authorization_group.platform_team 3
+terraform import secobserve_authorization_group.platform_team "Platform Team"
+```

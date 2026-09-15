@@ -90,3 +90,29 @@ Required:
 
 - `category` (String) Remediation category.
 - `text` (String) Remediation text.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+# Prefer the numeric id: general rule names are not reliably unique, and
+# import by name fails with an ambiguity error if more than one rule shares
+# the name.
+import {
+  to = secobserve_general_rule.ignore_dev_dependencies
+  id = "5"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Either the numeric id or the exact name works, but general rule names are
+# not reliably unique (product is always null, so PostgreSQL doesn't enforce
+# uniqueness across them) -- import by name fails with an ambiguity error if
+# more than one rule shares the name. Prefer the id.
+terraform import secobserve_general_rule.ignore_dev_dependencies 5
+```
