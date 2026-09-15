@@ -2,13 +2,50 @@ package product_group
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
 )
+
+// testSettingsClient stubs GET /api/settings/1/ with the given defaults, for
+// upgradeStateV0's dropIfDefault comparison. Defaults chosen far from any
+// value a test sets explicitly, so "kept" and "dropped" are unambiguous.
+func testSettingsClient(t *testing.T, settings client.Settings) *client.Client {
+	t.Helper()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(settings)
+	}))
+	t.Cleanup(server.Close)
+
+	c, err := client.New(client.Config{BaseURL: server.URL, APIToken: "test"})
+	if err != nil {
+		t.Fatalf("building test client: %v", err)
+	}
+	return c
+}
+
+func defaultTestSettings() client.Settings {
+	return client.Settings{
+		SecurityGateThresholdCritical:      1000,
+		SecurityGateThresholdHigh:          1000,
+		SecurityGateThresholdMedium:        1000,
+		SecurityGateThresholdLow:           1000,
+		SecurityGateThresholdNone:          1000,
+		SecurityGateThresholdUnknown:       1000,
+		BranchHousekeepingKeepInactiveDays: 1000,
+		BranchHousekeepingExemptBranches:   "^instance-default-pattern$",
+	}
+}
 
 // newModelV0 builds a minimal but schema-valid modelV0: the Set-typed
 // attributes need an explicitly typed null, not the Go zero value, or
@@ -53,9 +90,10 @@ func TestUpgradeStateV0MovesExplicitValues(t *testing.T) {
 	prior.RepositoryBranchHousekeepingKeepInactiveDays = types.Int64Value(60)
 	prior.RepositoryBranchHousekeepingExemptBranches = types.StringValue("^main$")
 
+	r := &productGroupResource{client: testSettingsClient(t, defaultTestSettings())}
 	req := resource.UpgradeStateRequest{State: statePtr(priorState(t, prior))}
 	resp := &resource.UpgradeStateResponse{}
-	upgradeStateV0(context.Background(), req, resp)
+	r.upgradeStateV0(context.Background(), req, resp)
 	if resp.Diagnostics.HasError() {
 		t.Fatalf("upgrade: %v", resp.Diagnostics.Errors())
 	}
@@ -94,9 +132,10 @@ func TestUpgradeStateV0MovesExplicitValues(t *testing.T) {
 func TestUpgradeStateV0LeavesUnconfiguredBlocksNil(t *testing.T) {
 	prior := newModelV0("group")
 
+	r := &productGroupResource{client: testSettingsClient(t, defaultTestSettings())}
 	req := resource.UpgradeStateRequest{State: statePtr(priorState(t, prior))}
 	resp := &resource.UpgradeStateResponse{}
-	upgradeStateV0(context.Background(), req, resp)
+	r.upgradeStateV0(context.Background(), req, resp)
 	if resp.Diagnostics.HasError() {
 		t.Fatalf("upgrade: %v", resp.Diagnostics.Errors())
 	}
@@ -111,6 +150,65 @@ func TestUpgradeStateV0LeavesUnconfiguredBlocksNil(t *testing.T) {
 	}
 	if upgraded.BranchHousekeeping.Block != nil {
 		t.Errorf("BranchHousekeeping.Block = %+v, want nil", upgraded.BranchHousekeeping.Block)
+	}
+}
+
+// The exact scenario reported: a v0 state where every field was
+// server-filled to the instance-wide default (active=true, every threshold
+// equal to the current default, keep_inactive_days/exempt_branches equal to
+// the current default) must upgrade to no block at all -- not a block full
+// of values nobody configured. Values that differ from the current default
+// are still carried forward untouched.
+func TestUpgradeStateV0DropsValuesMatchingCurrentDefaults(t *testing.T) {
+	settings := defaultTestSettings()
+
+	prior := newModelV0("group")
+	prior.SecurityGateActive = types.BoolValue(true)
+	prior.SecurityGateThresholdCritical = types.Int64Value(2) // differs -- kept
+	prior.SecurityGateThresholdHigh = types.Int64Value(settings.SecurityGateThresholdHigh)
+	prior.SecurityGateThresholdMedium = types.Int64Value(settings.SecurityGateThresholdMedium)
+	prior.SecurityGateThresholdLow = types.Int64Value(settings.SecurityGateThresholdLow)
+	prior.SecurityGateThresholdNone = types.Int64Value(settings.SecurityGateThresholdNone)
+	prior.SecurityGateThresholdUnknown = types.Int64Value(settings.SecurityGateThresholdUnknown)
+	prior.RepositoryBranchHousekeepingActive = types.BoolValue(true)
+	prior.RepositoryBranchHousekeepingKeepInactiveDays = types.Int64Value(settings.BranchHousekeepingKeepInactiveDays)
+	prior.RepositoryBranchHousekeepingExemptBranches = types.StringValue(settings.BranchHousekeepingExemptBranches)
+
+	r := &productGroupResource{client: testSettingsClient(t, settings)}
+	req := resource.UpgradeStateRequest{State: statePtr(priorState(t, prior))}
+	resp := &resource.UpgradeStateResponse{}
+	r.upgradeStateV0(context.Background(), req, resp)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("upgrade: %v", resp.Diagnostics.Errors())
+	}
+
+	var upgraded model
+	if diags := resp.State.Get(context.Background(), &upgraded); diags.HasError() {
+		t.Fatalf("reading upgraded state: %v", diags.Errors())
+	}
+
+	if upgraded.SecurityGate.Block == nil {
+		t.Fatal("SecurityGate.Block = nil, want non-nil (active + a non-default threshold survive)")
+	}
+	if got := upgraded.SecurityGate.Block.Critical.ValueInt64(); got != 2 {
+		t.Errorf("Critical = %d, want 2 (non-default, must survive)", got)
+	}
+	if !upgraded.SecurityGate.Block.High.IsNull() {
+		t.Errorf("High = %v, want null (matched current default, must be dropped)", upgraded.SecurityGate.Block.High)
+	}
+	if !upgraded.SecurityGate.Block.Medium.IsNull() || !upgraded.SecurityGate.Block.Low.IsNull() ||
+		!upgraded.SecurityGate.Block.None.IsNull() || !upgraded.SecurityGate.Block.Unknown.IsNull() {
+		t.Error("default-matching thresholds were not dropped")
+	}
+	if upgraded.BranchHousekeeping.Block == nil {
+		t.Fatal("BranchHousekeeping.Block = nil, want non-nil (active survives)")
+	}
+	if !upgraded.BranchHousekeeping.Block.KeepInactiveDays.IsNull() {
+		t.Errorf("KeepInactiveDays = %v, want null (matched current default, must be dropped)",
+			upgraded.BranchHousekeeping.Block.KeepInactiveDays)
+	}
+	if got := upgraded.BranchHousekeeping.Block.ExemptBranches.ValueString(); got != "" {
+		t.Errorf("ExemptBranches = %q, want \"\" (matched current default, must be dropped)", got)
 	}
 }
 

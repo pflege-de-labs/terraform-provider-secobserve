@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
 	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/schemacommon"
 	sovalidators "github.com/pflege-de-labs/terraform-provider-secobserve/internal/validators"
 )
@@ -287,7 +288,7 @@ func (r *productResource) UpgradeState(context.Context) map[int64]resource.State
 	return map[int64]resource.StateUpgrader{
 		0: {
 			PriorSchema:   priorSchemaV0(),
-			StateUpgrader: upgradeStateV0,
+			StateUpgrader: r.upgradeStateV0,
 		},
 		1: {
 			PriorSchema:   priorSchemaV1(),
@@ -298,19 +299,38 @@ func (r *productResource) UpgradeState(context.Context) map[int64]resource.State
 
 // upgradeStateV0 moves the flat security_gate_threshold_*/
 // repository_branch_housekeeping_{keep_inactive_days,exempt_branches} values
-// into the new nested blocks, carrying every non-null value forward
-// unconditionally. Prior state cannot distinguish a practitioner-configured
-// value from one SecObserve filled in server-side, so this may produce a
-// one-time plan diff clearing values that were never actually in the
-// practitioner's config -- expected, and resolved by a single apply.
+// into the new blocks. At v0 those fields were Optional+Computed, so a
+// non-null value in prior state could be either a practitioner-configured
+// value or one SecObserve filled in server-side -- unlike everything else in
+// this provider, prior state alone can't tell the two apart. Fetching the
+// current instance-wide defaults and dropping any value that matches one
+// resolves the ambiguity safely: a value equal to the default produces the
+// identical wire request whether it's kept or dropped (SecObserve fills the
+// same default either way), so dropping it can never lose real configuration
+// -- at worst, a value that coincidentally equals the default gets dropped
+// and then re-added by the next apply if the practitioner's actual .tf still
+// has it, which is a harmless one-line diff, not data loss.
 //
-// Existing .tf files still need to be hand-edited to the new nested syntax;
+// Existing .tf files still need to be hand-edited to the new block syntax;
 // this upgrader only prevents a "terraform state rm" + reimport, it doesn't
 // let old flat HCL keep working.
-func upgradeStateV0(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+func (r *productResource) upgradeStateV0(
+	ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse,
+) {
 	var prior modelV0
 	resp.Diagnostics.Append(req.State.Get(ctx, &prior)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	settings, err := r.client.GetSettings(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Could not read SecObserve instance settings while upgrading state",
+			"Upgrading from the pre-v1 schema needs the current security gate/branch housekeeping "+
+				"defaults to tell a practitioner-configured threshold apart from one SecObserve filled in "+
+				"server-side.\n\nUnderlying error: "+err.Error(),
+		)
 		return
 	}
 
@@ -323,7 +343,7 @@ func upgradeStateV0(ctx context.Context, req resource.UpgradeStateRequest, resp 
 		Raw:    tftypes.NewValue(currentSchema.Schema.Type().TerraformType(ctx), nil),
 	}
 
-	upgraded := modelFromV0(prior)
+	upgraded := modelFromV0(prior, settings)
 	resp.Diagnostics.Append(resp.State.Set(ctx, upgraded)...)
 }
 
@@ -412,7 +432,7 @@ func housekeepingBlockFromV1(v1 branchHousekeepingV1) *schemacommon.BranchHousek
 	return block
 }
 
-func modelFromV0(prior modelV0) model {
+func modelFromV0(prior modelV0, settings client.Settings) model {
 	upgraded := model{
 		ID:                          prior.ID,
 		Name:                        prior.Name,
@@ -436,49 +456,75 @@ func modelFromV0(prior modelV0) model {
 		scanners:                    prior.scanners,
 	}
 
-	upgraded.SecurityGate.Block = securityGateBlockFromV0(prior.securityGateV0)
-	upgraded.BranchHousekeeping.Block = housekeepingBlockFromV0(prior.branchHousekeepingV0)
+	upgraded.SecurityGate.Block = securityGateBlockFromV0(prior.securityGateV0, settings)
+	upgraded.BranchHousekeeping.Block = housekeepingBlockFromV0(prior.branchHousekeepingV0, settings)
 
 	return upgraded
 }
 
 // securityGateBlockFromV0 folds the old top-level security_gate_active into
-// the new block's active field. A null v0 active (inherit) with every
-// threshold also null becomes no block at all (inherit); anything else
-// becomes a block, active carried across exactly (including null, since the
-// new block's presence is what used to be carried by the old flat
-// security_gate_active being non-null in practice -- but a prior state can
-// have thresholds set while active is null, e.g. from a stale apply, so this
-// preserves whatever was actually there rather than guessing).
-func securityGateBlockFromV0(v0 securityGateV0) *schemacommon.SecurityGateBlock {
+// the new block's active field, dropping any threshold that matches the
+// current instance-wide default (see upgradeStateV0's doc comment for why
+// that's safe). A null v0 active (inherit) with every threshold also
+// null-or-dropped becomes no block at all (inherit).
+func securityGateBlockFromV0(v0 securityGateV0, settings client.Settings) *schemacommon.SecurityGateBlock {
+	critical := dropIfDefaultInt64(v0.SecurityGateThresholdCritical, settings.SecurityGateThresholdCritical)
+	high := dropIfDefaultInt64(v0.SecurityGateThresholdHigh, settings.SecurityGateThresholdHigh)
+	medium := dropIfDefaultInt64(v0.SecurityGateThresholdMedium, settings.SecurityGateThresholdMedium)
+	low := dropIfDefaultInt64(v0.SecurityGateThresholdLow, settings.SecurityGateThresholdLow)
+	none := dropIfDefaultInt64(v0.SecurityGateThresholdNone, settings.SecurityGateThresholdNone)
+	unknown := dropIfDefaultInt64(v0.SecurityGateThresholdUnknown, settings.SecurityGateThresholdUnknown)
+
 	if v0.SecurityGateActive.IsNull() &&
-		v0.SecurityGateThresholdCritical.IsNull() && v0.SecurityGateThresholdHigh.IsNull() &&
-		v0.SecurityGateThresholdMedium.IsNull() && v0.SecurityGateThresholdLow.IsNull() &&
-		v0.SecurityGateThresholdNone.IsNull() && v0.SecurityGateThresholdUnknown.IsNull() {
+		critical.IsNull() && high.IsNull() && medium.IsNull() && low.IsNull() && none.IsNull() && unknown.IsNull() {
 		return nil
 	}
 	return &schemacommon.SecurityGateBlock{
 		Active:   v0.SecurityGateActive,
-		Critical: v0.SecurityGateThresholdCritical,
-		High:     v0.SecurityGateThresholdHigh,
-		Medium:   v0.SecurityGateThresholdMedium,
-		Low:      v0.SecurityGateThresholdLow,
-		None:     v0.SecurityGateThresholdNone,
-		Unknown:  v0.SecurityGateThresholdUnknown,
+		Critical: critical,
+		High:     high,
+		Medium:   medium,
+		Low:      low,
+		None:     none,
+		Unknown:  unknown,
 	}
 }
 
 // housekeepingBlockFromV0 is the housekeeping equivalent of
 // securityGateBlockFromV0.
-func housekeepingBlockFromV0(v0 branchHousekeepingV0) *schemacommon.BranchHousekeepingBlock {
-	exempt := v0.RepositoryBranchHousekeepingExemptBranches
+func housekeepingBlockFromV0(v0 branchHousekeepingV0, settings client.Settings) *schemacommon.BranchHousekeepingBlock {
+	keepInactiveDays := dropIfDefaultInt64(
+		v0.RepositoryBranchHousekeepingKeepInactiveDays, settings.BranchHousekeepingKeepInactiveDays)
+	exemptBranches := dropIfDefaultString(
+		v0.RepositoryBranchHousekeepingExemptBranches, settings.BranchHousekeepingExemptBranches)
+
 	if v0.RepositoryBranchHousekeepingActive.IsNull() &&
-		v0.RepositoryBranchHousekeepingKeepInactiveDays.IsNull() && (exempt.IsNull() || exempt.ValueString() == "") {
+		keepInactiveDays.IsNull() && (exemptBranches.IsNull() || exemptBranches.ValueString() == "") {
 		return nil
 	}
 	return &schemacommon.BranchHousekeepingBlock{
 		Active:           v0.RepositoryBranchHousekeepingActive,
-		KeepInactiveDays: v0.RepositoryBranchHousekeepingKeepInactiveDays,
-		ExemptBranches:   exempt,
+		KeepInactiveDays: keepInactiveDays,
+		ExemptBranches:   exemptBranches,
 	}
+}
+
+// dropIfDefaultInt64 returns null if value equals the instance-wide default
+// -- very likely server-filled rather than practitioner-configured, and
+// even if it coincidentally isn't, dropping it changes nothing about what
+// gets sent to SecObserve on the next apply. See upgradeStateV0's doc
+// comment.
+func dropIfDefaultInt64(value types.Int64, defaultValue int64) types.Int64 {
+	if value.IsNull() || value.IsUnknown() || value.ValueInt64() != defaultValue {
+		return value
+	}
+	return types.Int64Null()
+}
+
+// dropIfDefaultString is the string equivalent of dropIfDefaultInt64.
+func dropIfDefaultString(value types.String, defaultValue string) types.String {
+	if value.IsNull() || value.IsUnknown() || value.ValueString() != defaultValue {
+		return value
+	}
+	return types.StringNull()
 }
