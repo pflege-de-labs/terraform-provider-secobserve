@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "timezone": "Europe/Berlin",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "The SecObserve release this provider targets. The container tag and the schema version constant are two halves of one decision and must never move apart, so they share a dependency name and land in a single PR.",
+      "managerFilePatterns": ["/^test/\\.env$/", "/^internal/client/client\\.go$/"],
+      "matchStrings": [
+        "SECOBSERVE_VERSION=(?<currentValue>\\S+)",
+        "SchemaVersion = \"(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "ghcr.io/secobserve/secobserve-backend"
+    },
+    {
+      "customType": "regex",
+      "description": "Tool versions pinned outside a manifest, marked with a renovate comment on the preceding line.",
+      "managerFilePatterns": ["/^Makefile$/", "/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+\\s*:?=\\s*(?<currentValue>\\S+)",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+version: (?<currentValue>\\S+)"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "A SecObserve bump is a behavioural change to the provider, not a chore: it needs the schema regenerated and the API diff reviewed.",
+      "matchDepNames": ["ghcr.io/secobserve/secobserve-backend"],
+      "groupName": "SecObserve",
+      "semanticCommitType": "feat",
+      "addLabels": ["secobserve-version"]
+    },
+    {
+      "description": "Keep the golangci-lint pin in the Makefile and the one in the workflow in the same PR.",
+      "matchDepNames": ["golangci/golangci-lint"],
+      "groupName": "golangci-lint"
+    },
+    {
+      "description": "The provider's own SDK. Grouped so the framework and its validators move together.",
+      "matchSourceUrls": ["https://github.com/hashicorp/terraform-plugin-{/,}**"],
+      "groupName": "terraform-plugin SDK"
+    }
+  ]
+}
