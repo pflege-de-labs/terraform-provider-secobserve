@@ -20,7 +20,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          # go.mod's `go` directive is the minimum supported version, not the
+          # version CI builds with; `local` there would also pin GOTOOLCHAIN.
+          go-version: stable
           cache: true
       - run: go build ./...
       - run: go vet ./...
@@ -43,7 +45,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          # go.mod's `go` directive is the minimum supported version, not the
+          # version CI builds with; `local` there would also pin GOTOOLCHAIN.
+          go-version: stable
           cache: true
       - run: go test ./... -timeout 5m
 
@@ -59,7 +63,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          # go.mod's `go` directive is the minimum supported version, not the
+          # version CI builds with; `local` there would also pin GOTOOLCHAIN.
+          go-version: stable
           cache: true
       - uses: hashicorp/setup-terraform@v4
         with:
@@ -90,33 +96,28 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          # go.mod's `go` directive is the minimum supported version, not the
+          # version CI builds with; `local` there would also pin GOTOOLCHAIN.
+          go-version: stable
           cache: true
-      - name: is the schema vendored yet?
-        id: vendored
-        run: |
-          if [ -f api/openapi.json ]; then
-            echo "result=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "result=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::api/openapi.json is not vendored yet; skipping the drift check."
-          fi
       - name: start SecObserve
-        if: steps.vendored.outputs.result == 'true'
         run: docker compose --env-file test/.env -f test/docker-compose.yml up -d
+      # No `make tools` here: oapi-codegen is a go.mod tool dependency that
+      # `go generate` resolves, and the rest of the toolchain is irrelevant to
+      # a drift check.
       - name: refetch schema and regenerate
-        if: steps.vendored.outputs.result == 'true'
         run: |
           eval "$(./test/bootstrap.sh)"
           make schema
-          make tools
           make generate
       - name: fail if the committed schema or client is stale
-        if: steps.vendored.outputs.result == 'true'
         run: |
-          if ! git diff --exit-code -- api/; then
+          if ! git diff --quiet -- api/; then
             echo "The vendored OpenAPI schema or the generated client is out of date."
             echo "Run 'make up && eval \"\$(./test/bootstrap.sh)\" && make schema && make generate' and commit the result."
+            echo "--- the diff below is the upstream API change report ---"
+            git diff --stat -- api/
+            git diff -- api/openapi.json
             exit 1
           fi
       - name: stop SecObserve
