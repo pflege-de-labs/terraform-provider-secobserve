@@ -404,42 +404,26 @@ const (
 
 // Defines values for ComponentNamesListParamsOrdering.
 const (
-	ComponentNamesListParamsOrderingBranchName                    ComponentNamesListParamsOrdering = "branch_name"
-	ComponentNamesListParamsOrderingComponentNameVersionType      ComponentNamesListParamsOrdering = "component_name_version_type"
-	ComponentNamesListParamsOrderingComponentType                 ComponentNamesListParamsOrdering = "component_type"
-	ComponentNamesListParamsOrderingHasObservations               ComponentNamesListParamsOrdering = "has_observations"
-	ComponentNamesListParamsOrderingId                            ComponentNamesListParamsOrdering = "id"
-	ComponentNamesListParamsOrderingMinusBranchName               ComponentNamesListParamsOrdering = "-branch_name"
-	ComponentNamesListParamsOrderingMinusComponentNameVersionType ComponentNamesListParamsOrdering = "-component_name_version_type"
-	ComponentNamesListParamsOrderingMinusComponentType            ComponentNamesListParamsOrdering = "-component_type"
-	ComponentNamesListParamsOrderingMinusHasObservations          ComponentNamesListParamsOrdering = "-has_observations"
-	ComponentNamesListParamsOrderingMinusId                       ComponentNamesListParamsOrdering = "-id"
-	ComponentNamesListParamsOrderingMinusOriginServiceName        ComponentNamesListParamsOrdering = "-origin_service_name"
-	ComponentNamesListParamsOrderingMinusProductGroupName         ComponentNamesListParamsOrdering = "-product_group_name"
-	ComponentNamesListParamsOrderingMinusProductName              ComponentNamesListParamsOrdering = "-product_name"
-	ComponentNamesListParamsOrderingOriginServiceName             ComponentNamesListParamsOrdering = "origin_service_name"
-	ComponentNamesListParamsOrderingProductGroupName              ComponentNamesListParamsOrdering = "product_group_name"
-	ComponentNamesListParamsOrderingProductName                   ComponentNamesListParamsOrdering = "product_name"
+	ComponentNamesListParamsOrderingMinusNameVersion   ComponentNamesListParamsOrdering = "-name_version"
+	ComponentNamesListParamsOrderingMinusPurlNamespace ComponentNamesListParamsOrdering = "-purl_namespace"
+	ComponentNamesListParamsOrderingMinusPurlType      ComponentNamesListParamsOrdering = "-purl_type"
+	ComponentNamesListParamsOrderingMinusType          ComponentNamesListParamsOrdering = "-type"
+	ComponentNamesListParamsOrderingNameVersion        ComponentNamesListParamsOrdering = "name_version"
+	ComponentNamesListParamsOrderingPurlNamespace      ComponentNamesListParamsOrdering = "purl_namespace"
+	ComponentNamesListParamsOrderingPurlType           ComponentNamesListParamsOrdering = "purl_type"
+	ComponentNamesListParamsOrderingType               ComponentNamesListParamsOrdering = "type"
 )
 
 // Defines values for ComponentsListParamsOrdering.
 const (
-	ComponentsListParamsOrderingBranchName                    ComponentsListParamsOrdering = "branch_name"
-	ComponentsListParamsOrderingComponentNameVersionType      ComponentsListParamsOrdering = "component_name_version_type"
-	ComponentsListParamsOrderingComponentType                 ComponentsListParamsOrdering = "component_type"
-	ComponentsListParamsOrderingHasObservations               ComponentsListParamsOrdering = "has_observations"
-	ComponentsListParamsOrderingId                            ComponentsListParamsOrdering = "id"
-	ComponentsListParamsOrderingMinusBranchName               ComponentsListParamsOrdering = "-branch_name"
-	ComponentsListParamsOrderingMinusComponentNameVersionType ComponentsListParamsOrdering = "-component_name_version_type"
-	ComponentsListParamsOrderingMinusComponentType            ComponentsListParamsOrdering = "-component_type"
-	ComponentsListParamsOrderingMinusHasObservations          ComponentsListParamsOrdering = "-has_observations"
-	ComponentsListParamsOrderingMinusId                       ComponentsListParamsOrdering = "-id"
-	ComponentsListParamsOrderingMinusOriginServiceName        ComponentsListParamsOrdering = "-origin_service_name"
-	ComponentsListParamsOrderingMinusProductGroupName         ComponentsListParamsOrdering = "-product_group_name"
-	ComponentsListParamsOrderingMinusProductName              ComponentsListParamsOrdering = "-product_name"
-	ComponentsListParamsOrderingOriginServiceName             ComponentsListParamsOrdering = "origin_service_name"
-	ComponentsListParamsOrderingProductGroupName              ComponentsListParamsOrdering = "product_group_name"
-	ComponentsListParamsOrderingProductName                   ComponentsListParamsOrdering = "product_name"
+	ComponentsListParamsOrderingMinusNameVersion   ComponentsListParamsOrdering = "-name_version"
+	ComponentsListParamsOrderingMinusPurlNamespace ComponentsListParamsOrdering = "-purl_namespace"
+	ComponentsListParamsOrderingMinusPurlType      ComponentsListParamsOrdering = "-purl_type"
+	ComponentsListParamsOrderingMinusType          ComponentsListParamsOrdering = "-type"
+	ComponentsListParamsOrderingNameVersion        ComponentsListParamsOrdering = "name_version"
+	ComponentsListParamsOrderingPurlNamespace      ComponentsListParamsOrdering = "purl_namespace"
+	ComponentsListParamsOrderingPurlType           ComponentsListParamsOrdering = "purl_type"
+	ComponentsListParamsOrderingType               ComponentsListParamsOrdering = "type"
 )
 
 // Defines values for ConcludedLicensesListParamsOrdering.
@@ -555,7 +539,11 @@ const (
 	LicenseComponentIdsListParamsOrderingMinusLicenseDataSpdxId          LicenseComponentIdsListParamsOrdering = "-license_data.spdx_id"
 	LicenseComponentIdsListParamsOrderingMinusManualConcludedComment     LicenseComponentIdsListParamsOrdering = "-manual_concluded_comment"
 	LicenseComponentIdsListParamsOrderingMinusOriginServiceName          LicenseComponentIdsListParamsOrdering = "-origin_service_name"
+	LicenseComponentIdsListParamsOrderingMinusProductGroupName           LicenseComponentIdsListParamsOrdering = "-product_group_name"
+	LicenseComponentIdsListParamsOrderingMinusProductName                LicenseComponentIdsListParamsOrdering = "-product_name"
 	LicenseComponentIdsListParamsOrderingOriginServiceName               LicenseComponentIdsListParamsOrdering = "origin_service_name"
+	LicenseComponentIdsListParamsOrderingProductGroupName                LicenseComponentIdsListParamsOrdering = "product_group_name"
+	LicenseComponentIdsListParamsOrderingProductName                     LicenseComponentIdsListParamsOrdering = "product_name"
 )
 
 // Defines values for LicenseComponentsListParamsComponentType.
@@ -609,7 +597,11 @@ const (
 	LicenseComponentsListParamsOrderingMinusLicenseDataSpdxId          LicenseComponentsListParamsOrdering = "-license_data.spdx_id"
 	LicenseComponentsListParamsOrderingMinusManualConcludedComment     LicenseComponentsListParamsOrdering = "-manual_concluded_comment"
 	LicenseComponentsListParamsOrderingMinusOriginServiceName          LicenseComponentsListParamsOrdering = "-origin_service_name"
+	LicenseComponentsListParamsOrderingMinusProductGroupName           LicenseComponentsListParamsOrdering = "-product_group_name"
+	LicenseComponentsListParamsOrderingMinusProductName                LicenseComponentsListParamsOrdering = "-product_name"
 	LicenseComponentsListParamsOrderingOriginServiceName               LicenseComponentsListParamsOrdering = "origin_service_name"
+	LicenseComponentsListParamsOrderingProductGroupName                LicenseComponentsListParamsOrdering = "product_group_name"
+	LicenseComponentsListParamsOrderingProductName                     LicenseComponentsListParamsOrdering = "product_name"
 )
 
 // Defines values for LicenseGroupAuthorizationGroupMembersListParamsOrdering.
@@ -1220,6 +1212,14 @@ const (
 	ProductNamesListParamsOrderingSecurityGatePassed         ProductNamesListParamsOrdering = "security_gate_passed"
 )
 
+// Defines values for ProductNotificationsListParamsOrdering.
+const (
+	ProductNotificationsListParamsOrderingMinusProductDataName ProductNotificationsListParamsOrdering = "-product_data.name"
+	ProductNotificationsListParamsOrderingMinusUser            ProductNotificationsListParamsOrdering = "-user"
+	ProductNotificationsListParamsOrderingProductDataName      ProductNotificationsListParamsOrdering = "product_data.name"
+	ProductNotificationsListParamsOrderingUser                 ProductNotificationsListParamsOrdering = "user"
+)
+
 // Defines values for ProductRulesListParamsApprovalStatus.
 const (
 	Approved      ProductRulesListParamsApprovalStatus = "Approved"
@@ -1826,31 +1826,24 @@ type CSAFVulnerability struct {
 
 // Component defines model for Component.
 type Component struct {
-	Branch                    *int    `json:"branch"`
-	BranchName                *string `json:"branch_name,omitempty"`
-	ComponentCpe              *string `json:"component_cpe,omitempty"`
-	ComponentCyclonedxBomLink *string `json:"component_cyclonedx_bom_link,omitempty"`
-	ComponentDependencies     *string `json:"component_dependencies,omitempty"`
-	ComponentName             string  `json:"component_name"`
-	ComponentNameVersion      *string `json:"component_name_version,omitempty"`
-	ComponentNameVersionType  *string `json:"component_name_version_type,omitempty"`
-	ComponentPurl             *string `json:"component_purl,omitempty"`
-	ComponentPurlType         *string `json:"component_purl_type,omitempty"`
-	ComponentType             *string `json:"component_type,omitempty"`
-	ComponentVersion          *string `json:"component_version,omitempty"`
-	HasObservations           bool    `json:"has_observations"`
-	Id                        string  `json:"id"`
-	OriginService             *int    `json:"origin_service"`
-	OriginServiceName         *string `json:"origin_service_name,omitempty"`
-	Product                   int     `json:"product"`
-	ProductGroupName          *string `json:"product_group_name,omitempty"`
-	ProductName               *string `json:"product_name,omitempty"`
+	HasActiveObservations   *bool   `json:"has_active_observations,omitempty"`
+	HasInactiveObservations *bool   `json:"has_inactive_observations,omitempty"`
+	HasLicenses             *bool   `json:"has_licenses,omitempty"`
+	Id                      *int    `json:"id,omitempty"`
+	IdentityHash            string  `json:"identity_hash"`
+	Name                    string  `json:"name"`
+	NameVersion             *string `json:"name_version,omitempty"`
+	Purl                    *string `json:"purl,omitempty"`
+	PurlNamespace           *string `json:"purl_namespace,omitempty"`
+	PurlType                *string `json:"purl_type,omitempty"`
+	Type                    *string `json:"type,omitempty"`
+	Version                 *string `json:"version,omitempty"`
 }
 
 // ComponentName defines model for ComponentName.
 type ComponentName struct {
-	ComponentNameVersion *string `json:"component_name_version,omitempty"`
-	Id                   string  `json:"id"`
+	Id          *int    `json:"id,omitempty"`
+	NameVersion *string `json:"name_version,omitempty"`
 }
 
 // ComponentTypeEnum defines model for ComponentTypeEnum.
@@ -2132,6 +2125,7 @@ type License struct {
 type LicenseComponent struct {
 	Branch                             *int                               `json:"branch"`
 	BranchName                         *string                            `json:"branch_name,omitempty"`
+	Component                          *int                               `json:"component"`
 	ComponentCpe                       *string                            `json:"component_cpe,omitempty"`
 	ComponentCyclonedxBomLink          *string                            `json:"component_cyclonedx_bom_link,omitempty"`
 	ComponentDependencies              *string                            `json:"component_dependencies,omitempty"`
@@ -2177,6 +2171,8 @@ type LicenseComponent struct {
 	OriginServiceName                  *string                            `json:"origin_service_name,omitempty"`
 	Permissions                        *[]PermissionsEnum                 `json:"permissions"`
 	Product                            int                                `json:"product"`
+	ProductGroupName                   *string                            `json:"product_group_name,omitempty"`
+	ProductName                        *string                            `json:"product_name,omitempty"`
 	Title                              *string                            `json:"title,omitempty"`
 	UploadFilename                     *string                            `json:"upload_filename,omitempty"`
 }
@@ -2214,6 +2210,7 @@ type LicenseComponentId struct {
 type LicenseComponentList struct {
 	Branch                             *int                                   `json:"branch"`
 	BranchName                         *string                                `json:"branch_name,omitempty"`
+	Component                          *int                                   `json:"component"`
 	ComponentCpe                       *string                                `json:"component_cpe,omitempty"`
 	ComponentCyclonedxBomLink          *string                                `json:"component_cyclonedx_bom_link,omitempty"`
 	ComponentName                      string                                 `json:"component_name"`
@@ -2253,6 +2250,8 @@ type LicenseComponentList struct {
 	OriginService                      *int                                   `json:"origin_service"`
 	OriginServiceName                  *string                                `json:"origin_service_name,omitempty"`
 	Product                            int                                    `json:"product"`
+	ProductGroupName                   *string                                `json:"product_group_name,omitempty"`
+	ProductName                        *string                                `json:"product_name,omitempty"`
 	UploadFilename                     *string                                `json:"upload_filename,omitempty"`
 }
 
@@ -2551,6 +2550,7 @@ type NestedObservation struct {
 	OriginCloudQualifiedResource          *string                                       `json:"origin_cloud_qualified_resource,omitempty"`
 	OriginCloudResource                   *string                                       `json:"origin_cloud_resource,omitempty"`
 	OriginCloudResourceType               *string                                       `json:"origin_cloud_resource_type,omitempty"`
+	OriginComponent                       *int                                          `json:"origin_component"`
 	OriginComponentCpe                    *string                                       `json:"origin_component_cpe,omitempty"`
 	OriginComponentCyclonedxBomLink       *string                                       `json:"origin_component_cyclonedx_bom_link,omitempty"`
 	OriginComponentDependencies           *string                                       `json:"origin_component_dependencies,omitempty"`
@@ -3050,6 +3050,7 @@ type Observation struct {
 	OriginCloudResource                   *string                                 `json:"origin_cloud_resource,omitempty"`
 	OriginCloudResourceType               *string                                 `json:"origin_cloud_resource_type,omitempty"`
 	OriginCloudResourceUrl                *string                                 `json:"origin_cloud_resource_url"`
+	OriginComponent                       *int                                    `json:"origin_component"`
 	OriginComponentCpe                    *string                                 `json:"origin_component_cpe,omitempty"`
 	OriginComponentCyclonedxBomLink       *string                                 `json:"origin_component_cyclonedx_bom_link,omitempty"`
 	OriginComponentDependencies           *string                                 `json:"origin_component_dependencies,omitempty"`
@@ -3375,6 +3376,7 @@ type ObservationList struct {
 	OriginCloudResource                   *string                                     `json:"origin_cloud_resource,omitempty"`
 	OriginCloudResourceType               *string                                     `json:"origin_cloud_resource_type,omitempty"`
 	OriginCloudResourceUrl                *string                                     `json:"origin_cloud_resource_url"`
+	OriginComponent                       *int                                        `json:"origin_component"`
 	OriginComponentCpe                    *string                                     `json:"origin_component_cpe,omitempty"`
 	OriginComponentCyclonedxBomLink       *string                                     `json:"origin_component_cyclonedx_bom_link,omitempty"`
 	OriginComponentName                   *string                                     `json:"origin_component_name,omitempty"`
@@ -4144,6 +4146,14 @@ type PaginatedProductNameList struct {
 	Results  []ProductName `json:"results"`
 }
 
+// PaginatedProductNotificationList defines model for PaginatedProductNotificationList.
+type PaginatedProductNotificationList struct {
+	Count    int                   `json:"count"`
+	Next     *string               `json:"next"`
+	Previous *string               `json:"previous"`
+	Results  []ProductNotification `json:"results"`
+}
+
 // PaginatedProductRuleList defines model for PaginatedProductRuleList.
 type PaginatedProductRuleList struct {
 	Count    int           `json:"count"`
@@ -4519,6 +4529,17 @@ type PatchedProductMemberRequest struct {
 	User    *int `json:"user,omitempty"`
 }
 
+// PatchedProductNotificationRequest defines model for PatchedProductNotificationRequest.
+type PatchedProductNotificationRequest struct {
+	AssessmentApprovalReceipt  *bool `json:"assessment_approval_receipt,omitempty"`
+	AssessmentToBeReviewed     *bool `json:"assessment_to_be_reviewed,omitempty"`
+	ObservationNewChanged      *bool `json:"observation_new_changed,omitempty"`
+	ObservationToBeReviewed    *bool `json:"observation_to_be_reviewed,omitempty"`
+	ProductRuleApprovalReceipt *bool `json:"product_rule_approval_receipt,omitempty"`
+	ProductRuleToBeReviewed    *bool `json:"product_rule_to_be_reviewed,omitempty"`
+	SecurityGateChanged        *bool `json:"security_gate_changed,omitempty"`
+}
+
 // PatchedProductRequest defines model for PatchedProductRequest.
 type PatchedProductRequest struct {
 	ApplyGeneralRules                            *bool                                                     `json:"apply_general_rules,omitempty"`
@@ -4762,6 +4783,9 @@ type PatchedSettingsRequest struct {
 
 	// OidcClockSkew Time margin in seconds for checks of issued at, not before and expiration of OIDC tokens
 	OidcClockSkew *int `json:"oidc_clock_skew,omitempty"`
+
+	// OidcStrictAudience Require the audience claim of OIDC tokens to be a single string matching the client id
+	OidcStrictAudience *bool `json:"oidc_strict_audience,omitempty"`
 
 	// PasswordValidatorAttributeSimilarity Validates that the password is sufficiently different from certain attributes of the user.
 	PasswordValidatorAttributeSimilarity *bool `json:"password_validator_attribute_similarity,omitempty"`
@@ -5368,6 +5392,38 @@ type ProductName struct {
 	Name string `json:"name"`
 }
 
+// ProductNotification defines model for ProductNotification.
+type ProductNotification struct {
+	AssessmentApprovalReceipt  *bool                         `json:"assessment_approval_receipt,omitempty"`
+	AssessmentToBeReviewed     *bool                         `json:"assessment_to_be_reviewed,omitempty"`
+	Id                         *int                          `json:"id,omitempty"`
+	ObservationNewChanged      *bool                         `json:"observation_new_changed,omitempty"`
+	ObservationToBeReviewed    *bool                         `json:"observation_to_be_reviewed,omitempty"`
+	Product                    *int                          `json:"product"`
+	ProductData                *NestedProductSerializerSmall `json:"product_data,omitempty"`
+	ProductRuleApprovalReceipt *bool                         `json:"product_rule_approval_receipt,omitempty"`
+	ProductRuleToBeReviewed    *bool                         `json:"product_rule_to_be_reviewed,omitempty"`
+	SecurityGateChanged        *bool                         `json:"security_gate_changed,omitempty"`
+	User                       *int                          `json:"user,omitempty"`
+}
+
+// ProductNotificationPair defines model for ProductNotificationPair.
+type ProductNotificationPair struct {
+	ProductNotification  *ProductNotification `json:"product_notification"`
+	TemplateNotification *ProductNotification `json:"template_notification"`
+}
+
+// ProductNotificationRequest defines model for ProductNotificationRequest.
+type ProductNotificationRequest struct {
+	AssessmentApprovalReceipt  *bool `json:"assessment_approval_receipt,omitempty"`
+	AssessmentToBeReviewed     *bool `json:"assessment_to_be_reviewed,omitempty"`
+	ObservationNewChanged      *bool `json:"observation_new_changed,omitempty"`
+	ObservationToBeReviewed    *bool `json:"observation_to_be_reviewed,omitempty"`
+	ProductRuleApprovalReceipt *bool `json:"product_rule_approval_receipt,omitempty"`
+	ProductRuleToBeReviewed    *bool `json:"product_rule_to_be_reviewed,omitempty"`
+	SecurityGateChanged        *bool `json:"security_gate_changed,omitempty"`
+}
+
 // ProductRequest defines model for ProductRequest.
 type ProductRequest struct {
 	ApplyGeneralRules                            *bool                                              `json:"apply_general_rules,omitempty"`
@@ -5704,6 +5760,9 @@ type Settings struct {
 	// OidcClockSkew Time margin in seconds for checks of issued at, not before and expiration of OIDC tokens
 	OidcClockSkew *int `json:"oidc_clock_skew,omitempty"`
 
+	// OidcStrictAudience Require the audience claim of OIDC tokens to be a single string matching the client id
+	OidcStrictAudience *bool `json:"oidc_strict_audience,omitempty"`
+
 	// PasswordValidatorAttributeSimilarity Validates that the password is sufficiently different from certain attributes of the user.
 	PasswordValidatorAttributeSimilarity *bool `json:"password_validator_attribute_similarity,omitempty"`
 
@@ -5794,16 +5853,17 @@ type TrackingStatusEnum string
 
 // User defines model for User.
 type User struct {
-	DateJoined             *time.Time  `json:"date_joined,omitempty"`
-	Email                  *User_Email `json:"email,omitempty"`
-	FirstName              *string     `json:"first_name,omitempty"`
-	FullName               *string     `json:"full_name,omitempty"`
-	HasApiTokens           *bool       `json:"has_api_tokens,omitempty"`
-	HasAuthorizationGroups *bool       `json:"has_authorization_groups,omitempty"`
-	HasPassword            *bool       `json:"has_password,omitempty"`
-	HasProductGroupMembers *bool       `json:"has_product_group_members,omitempty"`
-	HasProductMembers      *bool       `json:"has_product_members,omitempty"`
-	Id                     *int        `json:"id,omitempty"`
+	DateJoined              *time.Time  `json:"date_joined,omitempty"`
+	Email                   *User_Email `json:"email,omitempty"`
+	FirstName               *string     `json:"first_name,omitempty"`
+	FullName                *string     `json:"full_name,omitempty"`
+	HasApiTokens            *bool       `json:"has_api_tokens,omitempty"`
+	HasAuthorizationGroups  *bool       `json:"has_authorization_groups,omitempty"`
+	HasPassword             *bool       `json:"has_password,omitempty"`
+	HasProductGroupMembers  *bool       `json:"has_product_group_members,omitempty"`
+	HasProductMembers       *bool       `json:"has_product_members,omitempty"`
+	HasProductNotifications *bool       `json:"has_product_notifications,omitempty"`
+	Id                      *int        `json:"id,omitempty"`
 
 	// IsActive Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
 	IsActive   *bool `json:"is_active,omitempty"`
@@ -6217,29 +6277,26 @@ type BranchesListParamsOrdering string
 
 // ComponentNamesListParams defines parameters for ComponentNamesList.
 type ComponentNamesListParams struct {
-	Branch               *int    `form:"branch,omitempty" json:"branch,omitempty"`
-	BranchName           *string `form:"branch_name,omitempty" json:"branch_name,omitempty"`
-	ComponentNameVersion *string `form:"component_name_version,omitempty" json:"component_name_version,omitempty"`
-	ComponentPurlType    *string `form:"component_purl_type,omitempty" json:"component_purl_type,omitempty"`
-	ComponentType        *string `form:"component_type,omitempty" json:"component_type,omitempty"`
-	HasObservations      *bool   `form:"has_observations,omitempty" json:"has_observations,omitempty"`
+	HasActiveObservations   *bool   `form:"has_active_observations,omitempty" json:"has_active_observations,omitempty"`
+	HasInactiveObservations *bool   `form:"has_inactive_observations,omitempty" json:"has_inactive_observations,omitempty"`
+	HasLicenses             *bool   `form:"has_licenses,omitempty" json:"has_licenses,omitempty"`
+	NameVersion             *string `form:"name_version,omitempty" json:"name_version,omitempty"`
 
 	// Ordering Ordering
 	//
-	Ordering          *[]ComponentNamesListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
-	OriginService     *int                                `form:"origin_service,omitempty" json:"origin_service,omitempty"`
-	OriginServiceName *string                             `form:"origin_service_name,omitempty" json:"origin_service_name,omitempty"`
+	Ordering *[]ComponentNamesListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
 
 	// Page A page number within the paginated result set.
 	Page *int `form:"page,omitempty" json:"page,omitempty"`
 
 	// PageSize Number of results to return per page.
-	PageSize     *int `form:"page_size,omitempty" json:"page_size,omitempty"`
-	Product      *int `form:"product,omitempty" json:"product,omitempty"`
-	ProductGroup *int `form:"product_group,omitempty" json:"product_group,omitempty"`
+	PageSize      *int    `form:"page_size,omitempty" json:"page_size,omitempty"`
+	PurlNamespace *string `form:"purl_namespace,omitempty" json:"purl_namespace,omitempty"`
+	PurlType      *string `form:"purl_type,omitempty" json:"purl_type,omitempty"`
 
 	// Search A search term.
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
+	Type   *string `form:"type,omitempty" json:"type,omitempty"`
 }
 
 // ComponentNamesListParamsOrdering defines parameters for ComponentNamesList.
@@ -6247,29 +6304,26 @@ type ComponentNamesListParamsOrdering string
 
 // ComponentsListParams defines parameters for ComponentsList.
 type ComponentsListParams struct {
-	Branch               *int    `form:"branch,omitempty" json:"branch,omitempty"`
-	BranchName           *string `form:"branch_name,omitempty" json:"branch_name,omitempty"`
-	ComponentNameVersion *string `form:"component_name_version,omitempty" json:"component_name_version,omitempty"`
-	ComponentPurlType    *string `form:"component_purl_type,omitempty" json:"component_purl_type,omitempty"`
-	ComponentType        *string `form:"component_type,omitempty" json:"component_type,omitempty"`
-	HasObservations      *bool   `form:"has_observations,omitempty" json:"has_observations,omitempty"`
+	HasActiveObservations   *bool   `form:"has_active_observations,omitempty" json:"has_active_observations,omitempty"`
+	HasInactiveObservations *bool   `form:"has_inactive_observations,omitempty" json:"has_inactive_observations,omitempty"`
+	HasLicenses             *bool   `form:"has_licenses,omitempty" json:"has_licenses,omitempty"`
+	NameVersion             *string `form:"name_version,omitempty" json:"name_version,omitempty"`
 
 	// Ordering Ordering
 	//
-	Ordering          *[]ComponentsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
-	OriginService     *int                            `form:"origin_service,omitempty" json:"origin_service,omitempty"`
-	OriginServiceName *string                         `form:"origin_service_name,omitempty" json:"origin_service_name,omitempty"`
+	Ordering *[]ComponentsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
 
 	// Page A page number within the paginated result set.
 	Page *int `form:"page,omitempty" json:"page,omitempty"`
 
 	// PageSize Number of results to return per page.
-	PageSize     *int `form:"page_size,omitempty" json:"page_size,omitempty"`
-	Product      *int `form:"product,omitempty" json:"product,omitempty"`
-	ProductGroup *int `form:"product_group,omitempty" json:"product_group,omitempty"`
+	PageSize      *int    `form:"page_size,omitempty" json:"page_size,omitempty"`
+	PurlNamespace *string `form:"purl_namespace,omitempty" json:"purl_namespace,omitempty"`
+	PurlType      *string `form:"purl_type,omitempty" json:"purl_type,omitempty"`
 
 	// Search A search term.
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
+	Type   *string `form:"type,omitempty" json:"type,omitempty"`
 }
 
 // ComponentsListParamsOrdering defines parameters for ComponentsList.
@@ -6376,7 +6430,9 @@ type LicenseComponentEvidencesListParamsOrdering string
 type LicenseComponentIdsListParams struct {
 	Age                        interface{}                                    `form:"age,omitempty" json:"age,omitempty"`
 	Branch                     *int                                           `form:"branch,omitempty" json:"branch,omitempty"`
+	BranchName                 *string                                        `form:"branch_name,omitempty" json:"branch_name,omitempty"`
 	BranchNameExact            *string                                        `form:"branch_name_exact,omitempty" json:"branch_name_exact,omitempty"`
+	Component                  *int                                           `form:"component,omitempty" json:"component,omitempty"`
 	ComponentNameVersion       *string                                        `form:"component_name_version,omitempty" json:"component_name_version,omitempty"`
 	ComponentPurlType          *string                                        `form:"component_purl_type,omitempty" json:"component_purl_type,omitempty"`
 	ComponentType              *LicenseComponentIdsListParamsComponentType    `form:"component_type,omitempty" json:"component_type,omitempty"`
@@ -6390,15 +6446,17 @@ type LicenseComponentIdsListParams struct {
 
 	// Ordering Ordering
 	//
-	Ordering      *[]LicenseComponentIdsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
-	OriginService *int                                     `form:"origin_service,omitempty" json:"origin_service,omitempty"`
+	Ordering          *[]LicenseComponentIdsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
+	OriginService     *int                                     `form:"origin_service,omitempty" json:"origin_service,omitempty"`
+	OriginServiceName *string                                  `form:"origin_service_name,omitempty" json:"origin_service_name,omitempty"`
 
 	// Page A page number within the paginated result set.
 	Page *int `form:"page,omitempty" json:"page,omitempty"`
 
 	// PageSize Number of results to return per page.
-	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
-	Product  *int `form:"product,omitempty" json:"product,omitempty"`
+	PageSize     *int `form:"page_size,omitempty" json:"page_size,omitempty"`
+	Product      *int `form:"product,omitempty" json:"product,omitempty"`
+	ProductGroup *int `form:"product_group,omitempty" json:"product_group,omitempty"`
 }
 
 // LicenseComponentIdsListParamsComponentType defines parameters for LicenseComponentIdsList.
@@ -6414,7 +6472,9 @@ type LicenseComponentIdsListParamsOrdering string
 type LicenseComponentsListParams struct {
 	Age                        interface{}                                  `form:"age,omitempty" json:"age,omitempty"`
 	Branch                     *int                                         `form:"branch,omitempty" json:"branch,omitempty"`
+	BranchName                 *string                                      `form:"branch_name,omitempty" json:"branch_name,omitempty"`
 	BranchNameExact            *string                                      `form:"branch_name_exact,omitempty" json:"branch_name_exact,omitempty"`
+	Component                  *int                                         `form:"component,omitempty" json:"component,omitempty"`
 	ComponentNameVersion       *string                                      `form:"component_name_version,omitempty" json:"component_name_version,omitempty"`
 	ComponentPurlType          *string                                      `form:"component_purl_type,omitempty" json:"component_purl_type,omitempty"`
 	ComponentType              *LicenseComponentsListParamsComponentType    `form:"component_type,omitempty" json:"component_type,omitempty"`
@@ -6428,15 +6488,17 @@ type LicenseComponentsListParams struct {
 
 	// Ordering Ordering
 	//
-	Ordering      *[]LicenseComponentsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
-	OriginService *int                                   `form:"origin_service,omitempty" json:"origin_service,omitempty"`
+	Ordering          *[]LicenseComponentsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
+	OriginService     *int                                   `form:"origin_service,omitempty" json:"origin_service,omitempty"`
+	OriginServiceName *string                                `form:"origin_service_name,omitempty" json:"origin_service_name,omitempty"`
 
 	// Page A page number within the paginated result set.
 	Page *int `form:"page,omitempty" json:"page,omitempty"`
 
 	// PageSize Number of results to return per page.
-	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
-	Product  *int `form:"product,omitempty" json:"product,omitempty"`
+	PageSize     *int `form:"page_size,omitempty" json:"page_size,omitempty"`
+	Product      *int `form:"product,omitempty" json:"product,omitempty"`
+	ProductGroup *int `form:"product_group,omitempty" json:"product_group,omitempty"`
 }
 
 // LicenseComponentsListParamsComponentType defines parameters for LicenseComponentsList.
@@ -6447,11 +6509,6 @@ type LicenseComponentsListParamsEvaluationResult string
 
 // LicenseComponentsListParamsOrdering defines parameters for LicenseComponentsList.
 type LicenseComponentsListParamsOrdering string
-
-// LicenseComponentsForComponentRetrieveParams defines parameters for LicenseComponentsForComponentRetrieve.
-type LicenseComponentsForComponentRetrieveParams struct {
-	Component string `form:"component" json:"component"`
-}
 
 // LicenseComponentsLicenseOverviewRetrieveParams defines parameters for LicenseComponentsLicenseOverviewRetrieve.
 type LicenseComponentsLicenseOverviewRetrieveParams struct {
@@ -6778,6 +6835,7 @@ type ObservationTitlesListParams struct {
 	//
 	Ordering                          *[]ObservationTitlesListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
 	OriginCloudQualifiedResource      *string                                `form:"origin_cloud_qualified_resource,omitempty" json:"origin_cloud_qualified_resource,omitempty"`
+	OriginComponent                   *int                                   `form:"origin_component,omitempty" json:"origin_component,omitempty"`
 	OriginComponentCpe                *string                                `form:"origin_component_cpe,omitempty" json:"origin_component_cpe,omitempty"`
 	OriginComponentCyclonedxBomLink   *string                                `form:"origin_component_cyclonedx_bom_link,omitempty" json:"origin_component_cyclonedx_bom_link,omitempty"`
 	OriginComponentNameVersion        *string                                `form:"origin_component_name_version,omitempty" json:"origin_component_name_version,omitempty"`
@@ -6833,6 +6891,7 @@ type ObservationsListParams struct {
 	//
 	Ordering                          *[]ObservationsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
 	OriginCloudQualifiedResource      *string                           `form:"origin_cloud_qualified_resource,omitempty" json:"origin_cloud_qualified_resource,omitempty"`
+	OriginComponent                   *int                              `form:"origin_component,omitempty" json:"origin_component,omitempty"`
 	OriginComponentCpe                *string                           `form:"origin_component_cpe,omitempty" json:"origin_component_cpe,omitempty"`
 	OriginComponentCyclonedxBomLink   *string                           `form:"origin_component_cyclonedx_bom_link,omitempty" json:"origin_component_cyclonedx_bom_link,omitempty"`
 	OriginComponentNameVersion        *string                           `form:"origin_component_name_version,omitempty" json:"origin_component_name_version,omitempty"`
@@ -7070,6 +7129,39 @@ type ProductNamesListParams struct {
 
 // ProductNamesListParamsOrdering defines parameters for ProductNamesList.
 type ProductNamesListParamsOrdering string
+
+// ProductNotificationsListParams defines parameters for ProductNotificationsList.
+type ProductNotificationsListParams struct {
+	// Ordering Ordering
+	//
+	Ordering *[]ProductNotificationsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
+
+	// Page A page number within the paginated result set.
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize Number of results to return per page.
+	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
+	Product  *int `form:"product,omitempty" json:"product,omitempty"`
+	User     *int `form:"user,omitempty" json:"user,omitempty"`
+}
+
+// ProductNotificationsListParamsOrdering defines parameters for ProductNotificationsList.
+type ProductNotificationsListParamsOrdering string
+
+// ProductNotificationsForProductRetrieveParams defines parameters for ProductNotificationsForProductRetrieve.
+type ProductNotificationsForProductRetrieveParams struct {
+	Product int `form:"product" json:"product"`
+}
+
+// ProductNotificationsOverrideDestroyParams defines parameters for ProductNotificationsOverrideDestroy.
+type ProductNotificationsOverrideDestroyParams struct {
+	Product int `form:"product" json:"product"`
+}
+
+// ProductNotificationsOverrideCreateParams defines parameters for ProductNotificationsOverrideCreate.
+type ProductNotificationsOverrideCreateParams struct {
+	Product int `form:"product" json:"product"`
+}
 
 // ProductRulesListParams defines parameters for ProductRulesList.
 type ProductRulesListParams struct {
@@ -7677,6 +7769,12 @@ type ProductMembersPartialUpdateJSONRequestBody = PatchedProductMemberRequest
 
 // ProductMembersUpdateJSONRequestBody defines body for ProductMembersUpdate for application/json ContentType.
 type ProductMembersUpdateJSONRequestBody = ProductMemberRequest
+
+// ProductNotificationsPartialUpdateJSONRequestBody defines body for ProductNotificationsPartialUpdate for application/json ContentType.
+type ProductNotificationsPartialUpdateJSONRequestBody = PatchedProductNotificationRequest
+
+// ProductNotificationsUpdateJSONRequestBody defines body for ProductNotificationsUpdate for application/json ContentType.
+type ProductNotificationsUpdateJSONRequestBody = ProductNotificationRequest
 
 // ProductRulesCreateJSONRequestBody defines body for ProductRulesCreate for application/json ContentType.
 type ProductRulesCreateJSONRequestBody = ProductRuleRequest

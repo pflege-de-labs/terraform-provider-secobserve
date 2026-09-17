@@ -3,7 +3,7 @@
 Behaviours of the SecObserve REST API that shape this provider. Each entry
 names the upstream source location it was verified against, in the
 [SecObserve](https://github.com/SecObserve/SecObserve) repository at tag
-`v1.58.0`. Code comments point here rather than repeating the detail.
+`v1.59.1`. Code comments point here rather than repeating the detail.
 
 ## Authentication
 
@@ -301,3 +301,13 @@ Not creatable through the API; reference it, do not manage it.
 | `License` (SPDX) | `initial_license_load` plus a nightly SPDX License List import |
 | License groups named `"<category> (ScanCode LicenseDB)"` | `import_scancode_licensedb()`, re-run every 24 hours |
 | License policy `"Standard"` | `create_scancode_standard_policy()` at initial load |
+
+## Deliberately unmanaged APIs
+
+Endpoints that exist and are readable, but that this provider does not model.
+Recorded here so a later version bump does not re-litigate them.
+
+| API | Why not | Source |
+|---|---|---|
+| `Component` and `/api/components/`, first-class since 1.59.0 | Runtime data. Components are created implicitly when observations are imported or an SBOM is uploaded, and deleted again when orphaned — nothing to declare. | `core/models.py`, `core/migrations/0098_component.py` |
+| `Product_Notification` and `/api/product_notifications/`, added in 1.59.0 | Per-user notification opt-in, not admin configuration. The viewset is list+update only, `product` and `user` are read-only, and the user is taken from the requesting token — so a provider authenticated as one superuser could only ever manage that one account's preferences. | `notifications/api/views.py`, `notifications/models.py` |

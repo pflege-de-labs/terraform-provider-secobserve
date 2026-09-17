@@ -14,7 +14,7 @@ document explains the one-time setup it depends on and why.
 
 - Apple's `container` CLI (verified with 1.3.1) and `container system start`.
 - A Homebrew PostgreSQL service. Verified against `postgresql@18`; SecObserve
-  1.58 runs Django 6.1 with psycopg 3, so 16 or 18 are both fine. The upstream
+  1.59 runs Django 6.1 with psycopg 3, so 16 or 18 are both fine. The upstream
   Compose file pins 15.
 - Apple silicon needs no emulation: `ghcr.io/secobserve/secobserve-backend`
   publishes a `linux/arm64` image.

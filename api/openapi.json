@@ -1243,102 +1243,73 @@
             },
             "Component": {
                 "properties": {
-                    "branch": {
-                        "nullable": true,
-                        "type": "integer"
-                    },
-                    "branch_name": {
+                    "has_active_observations": {
                         "readOnly": true,
-                        "type": "string"
+                        "type": "boolean"
                     },
-                    "component_cpe": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
-                    "component_cyclonedx_bom_link": {
-                        "maxLength": 512,
-                        "type": "string"
-                    },
-                    "component_dependencies": {
-                        "maxLength": 32768,
-                        "type": "string"
-                    },
-                    "component_name": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
-                    "component_name_version": {
-                        "maxLength": 513,
-                        "type": "string"
-                    },
-                    "component_name_version_type": {
+                    "has_inactive_observations": {
                         "readOnly": true,
-                        "type": "string"
+                        "type": "boolean"
                     },
-                    "component_purl": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
-                    "component_purl_type": {
-                        "maxLength": 16,
-                        "type": "string"
-                    },
-                    "component_type": {
-                        "maxLength": 24,
-                        "type": "string"
-                    },
-                    "component_version": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
-                    "has_observations": {
+                    "has_licenses": {
+                        "readOnly": true,
                         "type": "boolean"
                     },
                     "id": {
-                        "maxLength": 32,
-                        "type": "string"
-                    },
-                    "origin_service": {
-                        "nullable": true,
+                        "readOnly": true,
                         "type": "integer"
                     },
-                    "origin_service_name": {
-                        "readOnly": true,
+                    "identity_hash": {
+                        "maxLength": 64,
                         "type": "string"
                     },
-                    "product": {
-                        "type": "integer"
-                    },
-                    "product_group_name": {
-                        "readOnly": true,
+                    "name": {
+                        "maxLength": 255,
                         "type": "string"
                     },
-                    "product_name": {
-                        "readOnly": true,
+                    "name_version": {
+                        "maxLength": 513,
+                        "type": "string"
+                    },
+                    "purl": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "purl_namespace": {
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "purl_type": {
+                        "maxLength": 16,
+                        "type": "string"
+                    },
+                    "type": {
+                        "maxLength": 24,
+                        "type": "string"
+                    },
+                    "version": {
+                        "maxLength": 255,
                         "type": "string"
                     }
                 },
                 "required": [
-                    "branch_name",
-                    "component_name",
-                    "component_name_version_type",
-                    "has_observations",
+                    "has_active_observations",
+                    "has_inactive_observations",
+                    "has_licenses",
                     "id",
-                    "origin_service_name",
-                    "product",
-                    "product_group_name",
-                    "product_name"
+                    "identity_hash",
+                    "name"
                 ],
                 "type": "object"
             },
             "ComponentName": {
                 "properties": {
-                    "component_name_version": {
-                        "maxLength": 513,
-                        "type": "string"
-                    },
                     "id": {
-                        "maxLength": 32,
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "name_version": {
+                        "maxLength": 513,
                         "type": "string"
                     }
                 },
@@ -2313,6 +2284,10 @@
                         "readOnly": true,
                         "type": "string"
                     },
+                    "component": {
+                        "nullable": true,
+                        "type": "integer"
+                    },
                     "component_cpe": {
                         "maxLength": 255,
                         "type": "string"
@@ -2513,6 +2488,14 @@
                     "product": {
                         "type": "integer"
                     },
+                    "product_group_name": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "product_name": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
                     "title": {
                         "readOnly": true,
                         "type": "string"
@@ -2537,6 +2520,8 @@
                     "origin_service_name",
                     "permissions",
                     "product",
+                    "product_group_name",
+                    "product_name",
                     "title"
                 ],
                 "type": "object"
@@ -2609,6 +2594,10 @@
                     "branch_name": {
                         "readOnly": true,
                         "type": "string"
+                    },
+                    "component": {
+                        "nullable": true,
+                        "type": "integer"
                     },
                     "component_cpe": {
                         "maxLength": 255,
@@ -2780,6 +2769,14 @@
                     "product": {
                         "type": "integer"
                     },
+                    "product_group_name": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
+                    "product_name": {
+                        "readOnly": true,
+                        "type": "string"
+                    },
                     "upload_filename": {
                         "maxLength": 255,
                         "type": "string"
@@ -2794,7 +2791,9 @@
                     "identity_hash",
                     "numerical_evaluation_result",
                     "origin_service_name",
-                    "product"
+                    "product",
+                    "product_group_name",
+                    "product_name"
                 ],
                 "type": "object"
             },
@@ -3811,6 +3810,10 @@
                     "origin_cloud_resource_type": {
                         "maxLength": 255,
                         "type": "string"
+                    },
+                    "origin_component": {
+                        "nullable": true,
+                        "type": "integer"
                     },
                     "origin_component_cpe": {
                         "maxLength": 255,
@@ -5393,6 +5396,10 @@
                         "readOnly": true,
                         "type": "string"
                     },
+                    "origin_component": {
+                        "nullable": true,
+                        "type": "integer"
+                    },
                     "origin_component_cpe": {
                         "maxLength": 255,
                         "type": "string"
@@ -6417,6 +6424,10 @@
                         "nullable": true,
                         "readOnly": true,
                         "type": "string"
+                    },
+                    "origin_component": {
+                        "nullable": true,
+                        "type": "integer"
                     },
                     "origin_component_cpe": {
                         "maxLength": 255,
@@ -9057,6 +9068,37 @@
                 ],
                 "type": "object"
             },
+            "PaginatedProductNotificationList": {
+                "properties": {
+                    "count": {
+                        "example": 123,
+                        "type": "integer"
+                    },
+                    "next": {
+                        "example": "http://api.example.org/accounts/?page=4",
+                        "format": "uri",
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "previous": {
+                        "example": "http://api.example.org/accounts/?page=2",
+                        "format": "uri",
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "results": {
+                        "items": {
+                            "$ref": "#/components/schemas/ProductNotification"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "type": "object"
+            },
             "PaginatedProductRuleList": {
                 "properties": {
                     "count": {
@@ -10187,6 +10229,32 @@
                 },
                 "type": "object"
             },
+            "PatchedProductNotificationRequest": {
+                "properties": {
+                    "assessment_approval_receipt": {
+                        "type": "boolean"
+                    },
+                    "assessment_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "observation_new_changed": {
+                        "type": "boolean"
+                    },
+                    "observation_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "product_rule_approval_receipt": {
+                        "type": "boolean"
+                    },
+                    "product_rule_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "security_gate_changed": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
             "PatchedProductRequest": {
                 "properties": {
                     "apply_general_rules": {
@@ -10814,6 +10882,10 @@
                         "maximum": 999999,
                         "minimum": 0,
                         "type": "integer"
+                    },
+                    "oidc_strict_audience": {
+                        "description": "Require the audience claim of OIDC tokens to be a single string matching the client id",
+                        "type": "boolean"
                     },
                     "password_validator_attribute_similarity": {
                         "description": "Validates that the password is sufficiently different from certain attributes of the user.",
@@ -12908,6 +12980,110 @@
                 ],
                 "type": "object"
             },
+            "ProductNotification": {
+                "properties": {
+                    "assessment_approval_receipt": {
+                        "type": "boolean"
+                    },
+                    "assessment_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "observation_new_changed": {
+                        "type": "boolean"
+                    },
+                    "observation_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "product": {
+                        "nullable": true,
+                        "readOnly": true,
+                        "type": "integer"
+                    },
+                    "product_data": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/NestedProductSerializerSmall"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "product_rule_approval_receipt": {
+                        "type": "boolean"
+                    },
+                    "product_rule_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "security_gate_changed": {
+                        "type": "boolean"
+                    },
+                    "user": {
+                        "readOnly": true,
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "product",
+                    "product_data",
+                    "user"
+                ],
+                "type": "object"
+            },
+            "ProductNotificationPair": {
+                "properties": {
+                    "product_notification": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ProductNotification"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "template_notification": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ProductNotification"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "product_notification",
+                    "template_notification"
+                ],
+                "type": "object"
+            },
+            "ProductNotificationRequest": {
+                "properties": {
+                    "assessment_approval_receipt": {
+                        "type": "boolean"
+                    },
+                    "assessment_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "observation_new_changed": {
+                        "type": "boolean"
+                    },
+                    "observation_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "product_rule_approval_receipt": {
+                        "type": "boolean"
+                    },
+                    "product_rule_to_be_reviewed": {
+                        "type": "boolean"
+                    },
+                    "security_gate_changed": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
             "ProductRequest": {
                 "properties": {
                     "apply_general_rules": {
@@ -13859,6 +14035,10 @@
                         "minimum": 0,
                         "type": "integer"
                     },
+                    "oidc_strict_audience": {
+                        "description": "Require the audience claim of OIDC tokens to be a single string matching the client id",
+                        "type": "boolean"
+                    },
                     "password_validator_attribute_similarity": {
                         "description": "Validates that the password is sufficiently different from certain attributes of the user.",
                         "type": "boolean"
@@ -14097,6 +14277,10 @@
                         "readOnly": true,
                         "type": "boolean"
                     },
+                    "has_product_notifications": {
+                        "readOnly": true,
+                        "type": "boolean"
+                    },
                     "id": {
                         "readOnly": true,
                         "type": "integer"
@@ -14167,6 +14351,7 @@
                     "has_password",
                     "has_product_group_members",
                     "has_product_members",
+                    "has_product_notifications",
                     "id",
                     "permissions",
                     "username"
@@ -14855,7 +15040,7 @@
     "info": {
         "description": "...",
         "title": "SecObserve",
-        "version": "1.58.0"
+        "version": "1.59.1"
     },
     "openapi": "3.0.3",
     "paths": {
@@ -16480,44 +16665,30 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "branch",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "branch_name",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "component_name_version",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "component_purl_type",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "component_type",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "has_observations",
+                        "name": "has_active_observations",
                         "schema": {
                             "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "has_inactive_observations",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "has_licenses",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "name_version",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -16528,42 +16699,20 @@
                         "schema": {
                             "items": {
                                 "enum": [
-                                    "-branch_name",
-                                    "-component_name_version_type",
-                                    "-component_type",
-                                    "-has_observations",
-                                    "-id",
-                                    "-origin_service_name",
-                                    "-product_group_name",
-                                    "-product_name",
-                                    "branch_name",
-                                    "component_name_version_type",
-                                    "component_type",
-                                    "has_observations",
-                                    "id",
-                                    "origin_service_name",
-                                    "product_group_name",
-                                    "product_name"
+                                    "-name_version",
+                                    "-purl_namespace",
+                                    "-purl_type",
+                                    "-type",
+                                    "name_version",
+                                    "purl_namespace",
+                                    "purl_type",
+                                    "type"
                                 ],
                                 "type": "string"
                             },
                             "type": "array"
                         },
                         "style": "form"
-                    },
-                    {
-                        "in": "query",
-                        "name": "origin_service",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "origin_service_name",
-                        "schema": {
-                            "type": "string"
-                        }
                     },
                     {
                         "description": "A page number within the paginated result set.",
@@ -16585,16 +16734,16 @@
                     },
                     {
                         "in": "query",
-                        "name": "product",
+                        "name": "purl_namespace",
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     },
                     {
                         "in": "query",
-                        "name": "product_group",
+                        "name": "purl_type",
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     },
                     {
@@ -16602,6 +16751,13 @@
                         "in": "query",
                         "name": "search",
                         "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
                         "schema": {
                             "type": "string"
                         }
@@ -16640,12 +16796,12 @@
                 "operationId": "component_names_retrieve",
                 "parameters": [
                     {
-                        "description": "A unique value identifying this component.",
+                        "description": "A unique integer value identifying this component.",
                         "in": "path",
                         "name": "id",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     }
                 ],
@@ -16683,44 +16839,30 @@
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "branch",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "branch_name",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "component_name_version",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "component_purl_type",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "component_type",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "has_observations",
+                        "name": "has_active_observations",
                         "schema": {
                             "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "has_inactive_observations",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "has_licenses",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "name_version",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -16731,42 +16873,20 @@
                         "schema": {
                             "items": {
                                 "enum": [
-                                    "-branch_name",
-                                    "-component_name_version_type",
-                                    "-component_type",
-                                    "-has_observations",
-                                    "-id",
-                                    "-origin_service_name",
-                                    "-product_group_name",
-                                    "-product_name",
-                                    "branch_name",
-                                    "component_name_version_type",
-                                    "component_type",
-                                    "has_observations",
-                                    "id",
-                                    "origin_service_name",
-                                    "product_group_name",
-                                    "product_name"
+                                    "-name_version",
+                                    "-purl_namespace",
+                                    "-purl_type",
+                                    "-type",
+                                    "name_version",
+                                    "purl_namespace",
+                                    "purl_type",
+                                    "type"
                                 ],
                                 "type": "string"
                             },
                             "type": "array"
                         },
                         "style": "form"
-                    },
-                    {
-                        "in": "query",
-                        "name": "origin_service",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "origin_service_name",
-                        "schema": {
-                            "type": "string"
-                        }
                     },
                     {
                         "description": "A page number within the paginated result set.",
@@ -16788,16 +16908,16 @@
                     },
                     {
                         "in": "query",
-                        "name": "product",
+                        "name": "purl_namespace",
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     },
                     {
                         "in": "query",
-                        "name": "product_group",
+                        "name": "purl_type",
                         "schema": {
-                            "type": "integer"
+                            "type": "string"
                         }
                     },
                     {
@@ -16805,6 +16925,13 @@
                         "in": "query",
                         "name": "search",
                         "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
                         "schema": {
                             "type": "string"
                         }
@@ -16843,12 +16970,12 @@
                 "operationId": "components_retrieve",
                 "parameters": [
                     {
-                        "description": "A unique value identifying this component.",
+                        "description": "A unique integer value identifying this component.",
                         "in": "path",
                         "name": "id",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     }
                 ],
@@ -18152,9 +18279,23 @@
                     },
                     {
                         "in": "query",
+                        "name": "branch_name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "branch_name_exact",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "component",
+                        "schema": {
+                            "type": "integer"
                         }
                     },
                     {
@@ -18269,6 +18410,8 @@
                                     "-license_data.spdx_id",
                                     "-manual_concluded_comment",
                                     "-origin_service_name",
+                                    "-product_group_name",
+                                    "-product_name",
                                     "branch_name",
                                     "component_name_version_type",
                                     "component_purl_type",
@@ -18280,7 +18423,9 @@
                                     "last_change",
                                     "license_data.spdx_id",
                                     "manual_concluded_comment",
-                                    "origin_service_name"
+                                    "origin_service_name",
+                                    "product_group_name",
+                                    "product_name"
                                 ],
                                 "type": "string"
                             },
@@ -18293,6 +18438,13 @@
                         "name": "origin_service",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "origin_service_name",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -18316,6 +18468,13 @@
                     {
                         "in": "query",
                         "name": "product",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product_group",
                         "schema": {
                             "type": "integer"
                         }
@@ -18417,9 +18576,23 @@
                     },
                     {
                         "in": "query",
+                        "name": "branch_name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "branch_name_exact",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "component",
+                        "schema": {
+                            "type": "integer"
                         }
                     },
                     {
@@ -18534,6 +18707,8 @@
                                     "-license_data.spdx_id",
                                     "-manual_concluded_comment",
                                     "-origin_service_name",
+                                    "-product_group_name",
+                                    "-product_name",
                                     "branch_name",
                                     "component_name_version_type",
                                     "component_purl_type",
@@ -18545,7 +18720,9 @@
                                     "last_change",
                                     "license_data.spdx_id",
                                     "manual_concluded_comment",
-                                    "origin_service_name"
+                                    "origin_service_name",
+                                    "product_group_name",
+                                    "product_name"
                                 ],
                                 "type": "string"
                             },
@@ -18558,6 +18735,13 @@
                         "name": "origin_service",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "origin_service_name",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -18584,46 +18768,12 @@
                         "schema": {
                             "type": "integer"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedLicenseComponentListList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                },
-                "security": [
-                    {
-                        "API token authentication": []
                     },
-                    {
-                        "JWT authentication": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "tags": [
-                    "license_components"
-                ]
-            }
-        },
-        "/api/license_components/for_component/": {
-            "get": {
-                "operationId": "license_components_for_component_retrieve",
-                "parameters": [
                     {
                         "in": "query",
-                        "name": "component",
-                        "required": true,
+                        "name": "product_group",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     }
                 ],
@@ -18632,7 +18782,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LicenseComponentList"
+                                    "$ref": "#/components/schemas/PaginatedLicenseComponentListList"
                                 }
                             }
                         },
@@ -22992,6 +23142,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "origin_component",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "origin_component_cpe",
                         "schema": {
                             "type": "string"
@@ -23391,6 +23548,13 @@
                         "name": "origin_cloud_qualified_resource",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "origin_component",
+                        "schema": {
+                            "type": "integer"
                         }
                     },
                     {
@@ -25855,6 +26019,335 @@
                 ],
                 "tags": [
                     "product_names"
+                ]
+            }
+        },
+        "/api/product_notifications/": {
+            "get": {
+                "operationId": "product_notifications_list",
+                "parameters": [
+                    {
+                        "description": "Ordering\n\n",
+                        "explode": false,
+                        "in": "query",
+                        "name": "ordering",
+                        "schema": {
+                            "items": {
+                                "enum": [
+                                    "-product_data.name",
+                                    "-user",
+                                    "product_data.name",
+                                    "user"
+                                ],
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "style": "form"
+                    },
+                    {
+                        "description": "A page number within the paginated result set.",
+                        "in": "query",
+                        "name": "page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Number of results to return per page.",
+                        "in": "query",
+                        "name": "page_size",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "product",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "user",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedProductNotificationList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "product_notifications"
+                ]
+            }
+        },
+        "/api/product_notifications/for_product/": {
+            "get": {
+                "operationId": "product_notifications_for_product_retrieve",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProductNotificationPair"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "product_notifications"
+                ]
+            }
+        },
+        "/api/product_notifications/override/": {
+            "delete": {
+                "operationId": "product_notifications_override_destroy",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "product_notifications"
+                ]
+            },
+            "post": {
+                "operationId": "product_notifications_override_create",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProductNotification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "product_notifications"
+                ]
+            }
+        },
+        "/api/product_notifications/template/": {
+            "get": {
+                "operationId": "product_notifications_template_retrieve",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProductNotification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "product_notifications"
+                ]
+            }
+        },
+        "/api/product_notifications/{id}/": {
+            "patch": {
+                "operationId": "product_notifications_partial_update",
+                "parameters": [
+                    {
+                        "description": "A unique integer value identifying this product_ notification.",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedProductNotificationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProductNotification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "product_notifications"
+                ]
+            },
+            "put": {
+                "operationId": "product_notifications_update",
+                "parameters": [
+                    {
+                        "description": "A unique integer value identifying this product_ notification.",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductNotificationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProductNotification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "product_notifications"
                 ]
             }
         },

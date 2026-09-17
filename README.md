@@ -9,7 +9,7 @@ Runtime data — observations, license components, scan results, metrics, VEX
 documents — is deliberately out of scope. That belongs in the CI/CD pipeline
 that runs the scanners, not in Terraform state.
 
-Built against SecObserve **1.58.0**.
+Built against SecObserve **1.59.1**.
 
 ## Status
 
