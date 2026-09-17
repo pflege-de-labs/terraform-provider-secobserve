@@ -59,7 +59,7 @@ make generate    # regenerate api/models.gen.go
 CI fails when the committed schema and generated code are stale, so bumping
 the target SecObserve version is always a reviewable commit. Bumping means:
 change `SECOBSERVE_VERSION` in `test/.env` and `client.SchemaVersion` in
-`internal/client/status.go`, then rerun the two commands above.
+`internal/client/client.go`, then rerun the two commands above.
 
 Only models are generated. The transport layer in `internal/client` is
 hand-written because the generated client cannot express SecObserve's

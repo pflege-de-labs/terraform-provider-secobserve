@@ -31,7 +31,7 @@ func TestVerifyInstance(t *testing.T) {
 		{
 			name:        "patch releases are compatible",
 			me:          `{"id":1,"username":"admin","is_superuser":true}`,
-			version:     `{"version":"1.58.99"}`,
+			version:     `{"version":"1.59.99"}`,
 			wantNoWarns: true,
 		},
 		{

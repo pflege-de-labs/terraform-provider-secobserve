@@ -88,6 +88,7 @@ resource "secobserve_settings" "this" {
 - `observation_title_notification_slack_webhook` (String) Slack webhook for observation-title notifications.
 - `observation_title_notification_status_list` (Set of String) Only notify about a new observation title in one of these statuses. Any of `Open`, `Affected`, `Resolved`, `Duplicate`, `False positive`, `In review`, `Not affected`, `Not security`, `Risk accepted`. An empty set disables the status condition.
 - `oidc_clock_skew` (Number) Seconds of clock skew tolerated when validating OIDC token timestamps.
+- `oidc_strict_audience` (Boolean) Require an OIDC token's `aud` claim to be a single string matching the client id. Disable only for identity providers that issue multi-valued audiences.
 - `password_validator_attribute_similarity` (Boolean)
 - `password_validator_common_passwords` (Boolean)
 - `password_validator_minimum_length` (Number) Minimum password length.

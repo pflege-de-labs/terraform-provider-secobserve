@@ -309,6 +309,12 @@ func (r *settingsResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			MarkdownDescription: "Seconds of clock skew tolerated when validating OIDC token timestamps.",
 		},
 
+		"oidc_strict_audience": schema.BoolAttribute{
+			Optional: true, Computed: true, Default: booldefault.StaticBool(true),
+			MarkdownDescription: "Require an OIDC token's `aud` claim to be a single string matching the " +
+				"client id. Disable only for identity providers that issue multi-valued audiences.",
+		},
+
 		"observation_count_from_metrics": boolSetting(false),
 
 		"feature_cross_scanner_deduplication": boolSetting(false),

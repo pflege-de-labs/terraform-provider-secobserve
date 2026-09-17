@@ -100,7 +100,8 @@ type Settings struct {
 	ExploitInformationMaxAgeYears int64  `json:"exploit_information_max_age_years"`
 	PeriodicTaskMaxEntries        int64  `json:"periodic_task_max_entries"`
 
-	OIDCClockSkew int64 `json:"oidc_clock_skew"`
+	OIDCClockSkew      int64 `json:"oidc_clock_skew"`
+	OIDCStrictAudience bool  `json:"oidc_strict_audience"`
 
 	ObservationCountFromMetrics bool `json:"observation_count_from_metrics"`
 

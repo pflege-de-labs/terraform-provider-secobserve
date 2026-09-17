@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
 )
 
 // stubSecObserve is a minimal SecObserve stand-in that reproduces the
@@ -76,7 +78,7 @@ func (s *stubSecObserve) route(w http.ResponseWriter, r *http.Request) {
 	case path == "api/users/me":
 		writeJSON(w, http.StatusOK, map[string]any{"id": 1, "username": "admin", "is_superuser": true})
 	case path == "api/status/version":
-		writeJSON(w, http.StatusOK, map[string]any{"version": "1.58.0"})
+		writeJSON(w, http.StatusOK, map[string]any{"version": client.SchemaVersion})
 	case path == "api/products" && r.Method == http.MethodPost:
 		s.createProduct(w, r)
 	case path == "api/products" && r.Method == http.MethodGet:

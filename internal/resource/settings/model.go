@@ -82,7 +82,8 @@ type model struct {
 	ExploitInformationMaxAgeYears          types.Int64  `tfsdk:"exploit_information_max_age_years"`
 	PeriodicTaskMaxEntries                 types.Int64  `tfsdk:"periodic_task_max_entries"`
 
-	OIDCClockSkew types.Int64 `tfsdk:"oidc_clock_skew"`
+	OIDCClockSkew      types.Int64 `tfsdk:"oidc_clock_skew"`
+	OIDCStrictAudience types.Bool  `tfsdk:"oidc_strict_audience"`
 
 	ObservationCountFromMetrics types.Bool `tfsdk:"observation_count_from_metrics"`
 
@@ -161,7 +162,8 @@ func (m model) toRequest(ctx context.Context, diags *diag.Diagnostics) client.Se
 		ExploitInformationMaxAgeYears:          m.ExploitInformationMaxAgeYears.ValueInt64(),
 		PeriodicTaskMaxEntries:                 m.PeriodicTaskMaxEntries.ValueInt64(),
 
-		OIDCClockSkew: m.OIDCClockSkew.ValueInt64(),
+		OIDCClockSkew:      m.OIDCClockSkew.ValueInt64(),
+		OIDCStrictAudience: tfutil.BoolValue(m.OIDCStrictAudience),
 
 		ObservationCountFromMetrics: tfutil.BoolValue(m.ObservationCountFromMetrics),
 
@@ -242,6 +244,7 @@ func (m *model) fromAPI(ctx context.Context, settings client.Settings, diags *di
 	m.PeriodicTaskMaxEntries = types.Int64Value(settings.PeriodicTaskMaxEntries)
 
 	m.OIDCClockSkew = types.Int64Value(settings.OIDCClockSkew)
+	m.OIDCStrictAudience = types.BoolValue(settings.OIDCStrictAudience)
 
 	m.ObservationCountFromMetrics = types.BoolValue(settings.ObservationCountFromMetrics)
 
