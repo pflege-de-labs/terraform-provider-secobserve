@@ -19,8 +19,9 @@ HOST_ADDRESS   ?=
 # standalone module and must not be pulled into someone else's workspace.
 export GOWORK := off
 
-# Pinned tool versions. Keep in sync with .devcontainer/post-create.sh.
-OAPI_CODEGEN_VERSION := v2.5.0
+# Pinned tool versions. oapi-codegen is not here: it is a go.mod tool
+# dependency, so `go generate` pins it and Renovate tracks it with everything
+# else in go.mod.
 TFPLUGINDOCS_VERSION := v0.23.0
 GOLANGCI_LINT_VERSION:= v2.13.2
 
@@ -110,7 +111,6 @@ docs: ## Regenerate docs/ with tfplugindocs
 
 .PHONY: tools
 tools: ## Install the pinned development tools
-	go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@$(OAPI_CODEGEN_VERSION)
 	go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@$(TFPLUGINDOCS_VERSION)
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
