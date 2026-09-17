@@ -22,7 +22,9 @@ export GOWORK := off
 # Pinned tool versions. oapi-codegen is not here: it is a go.mod tool
 # dependency, so `go generate` pins it and Renovate tracks it with everything
 # else in go.mod.
+# renovate: datasource=github-releases depName=hashicorp/terraform-plugin-docs
 TFPLUGINDOCS_VERSION := v0.23.0
+# renovate: datasource=github-releases depName=golangci/golangci-lint
 GOLANGCI_LINT_VERSION:= v2.13.2
 
 .PHONY: help

@@ -1,0 +1,75 @@
+name: renovate schema
+
+# When Renovate bumps the SecObserve pins (SECOBSERVE_VERSION in test/.env and
+# client.SchemaVersion, grouped into one PR by renovate.json), the vendored
+# api/openapi.json goes stale and the `vendored schema is current` job in
+# test.yml fails. Renovate cannot regenerate it — that needs a running
+# SecObserve at the new version — so this job does it and pushes the result
+# back onto the PR branch.
+#
+# Caveat: a push made with GITHUB_TOKEN does not retrigger workflows, so the
+# PR's other checks stay one commit behind this one. That is tolerable because
+# the acceptance job already ran against the new container version (it reads
+# the bumped test/.env). To make the checks re-run, swap the token for one
+# issued by actions/create-github-app-token.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  GOWORK: "off"
+
+jobs:
+  regenerate:
+    name: regenerate the vendored schema
+    # A fork's GITHUB_TOKEN has no write access, so the push would fail; skip
+    # rather than fail, and let the drift check report the staleness instead.
+    if: >-
+      startsWith(github.head_ref, 'renovate/') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: actions/setup-go@v7
+        with:
+          # go.mod's `go` directive is the minimum supported version, not the
+          # version CI builds with; `local` there would also pin GOTOOLCHAIN.
+          go-version: stable
+          cache: true
+
+      - name: start SecObserve
+        run: docker compose --env-file test/.env -f test/docker-compose.yml up -d
+
+      - name: refetch schema and regenerate
+        run: |
+          eval "$(./test/bootstrap.sh)"
+          make schema
+          make generate
+
+      - name: commit the regenerated schema
+        run: |
+          if git diff --quiet -- api/; then
+            echo "::notice::the vendored schema already matches this version."
+            exit 0
+          fi
+          git diff --stat -- api/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- api/
+          git commit -m "chore: regenerate the vendored SecObserve schema"
+          git push origin "HEAD:${{ github.head_ref }}"
+
+      - name: backend logs on failure
+        if: failure()
+        run: docker compose --env-file test/.env -f test/docker-compose.yml logs backend
+
+      - name: stop SecObserve
+        if: always()
+        run: docker compose --env-file test/.env -f test/docker-compose.yml down --volumes
