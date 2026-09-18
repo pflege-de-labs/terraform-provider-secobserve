@@ -23,7 +23,7 @@ export GOWORK := off
 # dependency, so `go generate` pins it and Renovate tracks it with everything
 # else in go.mod.
 # renovate: datasource=github-releases depName=hashicorp/terraform-plugin-docs
-TFPLUGINDOCS_VERSION := v0.23.0
+TFPLUGINDOCS_VERSION := v0.25.0
 # renovate: datasource=github-releases depName=golangci/golangci-lint
 GOLANGCI_LINT_VERSION:= v2.13.2
 
