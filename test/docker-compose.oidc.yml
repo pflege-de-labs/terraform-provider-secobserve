@@ -31,7 +31,7 @@ services:
       OIDC_GROUPS: groups
 
   keycloak:
-    image: keycloak/keycloak:26.7.2
+    image: keycloak/keycloak:26.7.4
     command: ["start-dev", "--import-realm"]
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
