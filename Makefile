@@ -25,7 +25,7 @@ export GOWORK := off
 # renovate: datasource=github-releases depName=hashicorp/terraform-plugin-docs
 TFPLUGINDOCS_VERSION := v0.25.0
 # renovate: datasource=github-releases depName=golangci/golangci-lint
-GOLANGCI_LINT_VERSION:= v2.13.2
+GOLANGCI_LINT_VERSION:= v2.14.0
 
 .PHONY: help
 help: ## Show this help
