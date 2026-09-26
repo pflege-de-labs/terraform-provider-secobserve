@@ -361,9 +361,7 @@
                     }
                 },
                 "required": [
-                    "name",
-                    "password",
-                    "username"
+                    "name"
                 ],
                 "type": "object"
             },
@@ -397,9 +395,7 @@
                     }
                 },
                 "required": [
-                    "name",
-                    "password",
-                    "username"
+                    "name"
                 ],
                 "type": "object"
             },
@@ -867,6 +863,11 @@
                         "readOnly": true,
                         "type": "integer"
                     },
+                    "security_gate_passed": {
+                        "nullable": true,
+                        "readOnly": true,
+                        "type": "boolean"
+                    },
                     "unknown_licenses_count": {
                         "readOnly": true,
                         "type": "integer"
@@ -887,6 +888,7 @@
                     "name_with_product",
                     "product",
                     "review_required_licenses_count",
+                    "security_gate_passed",
                     "unknown_licenses_count"
                 ],
                 "type": "object"
@@ -10877,6 +10879,12 @@
                         },
                         "type": "array"
                     },
+                    "oidc_api_token_max_authentication_age": {
+                        "description": "Maximum age in minutes of the OIDC authentication to create or revoke a user API token, 0 disables the check",
+                        "maximum": 999999,
+                        "minimum": 0,
+                        "type": "integer"
+                    },
                     "oidc_clock_skew": {
                         "description": "Time margin in seconds for checks of issued at, not before and expiration of OIDC tokens",
                         "maximum": 999999,
@@ -10980,6 +10988,12 @@
                         "description": "Base URL of the VulnerableCode instance",
                         "maxLength": 255,
                         "type": "string"
+                    },
+                    "vulnerablecode_cache_ttl_hours": {
+                        "description": "Time to live for VulnerableCode cache in hours",
+                        "maximum": 999999,
+                        "minimum": 0,
+                        "type": "integer"
                     }
                 },
                 "type": "object"
@@ -11006,6 +11020,37 @@
             },
             "PatchedUserSettingsRequest": {
                 "properties": {
+                    "email": {
+                        "oneOf": [
+                            {
+                                "format": "email",
+                                "maxLength": 254,
+                                "type": "string"
+                            },
+                            {
+                                "maxLength": 0,
+                                "type": "string"
+                            }
+                        ],
+                        "title": "Email address"
+                    },
+                    "notification_email_active": {
+                        "type": "boolean"
+                    },
+                    "notification_ms_teams_active": {
+                        "type": "boolean"
+                    },
+                    "notification_ms_teams_webhook": {
+                        "maxLength": 2048,
+                        "type": "string"
+                    },
+                    "notification_slack_active": {
+                        "type": "boolean"
+                    },
+                    "notification_slack_webhook": {
+                        "maxLength": 2048,
+                        "type": "string"
+                    },
                     "setting_list_size": {
                         "$ref": "#/components/schemas/SettingListSizeEnum"
                     },
@@ -14029,6 +14074,12 @@
                         },
                         "type": "array"
                     },
+                    "oidc_api_token_max_authentication_age": {
+                        "description": "Maximum age in minutes of the OIDC authentication to create or revoke a user API token, 0 disables the check",
+                        "maximum": 999999,
+                        "minimum": 0,
+                        "type": "integer"
+                    },
                     "oidc_clock_skew": {
                         "description": "Time margin in seconds for checks of issued at, not before and expiration of OIDC tokens",
                         "maximum": 999999,
@@ -14132,6 +14183,12 @@
                         "description": "Base URL of the VulnerableCode instance",
                         "maxLength": 255,
                         "type": "string"
+                    },
+                    "vulnerablecode_cache_ttl_hours": {
+                        "description": "Time to live for VulnerableCode cache in hours",
+                        "maximum": 999999,
+                        "minimum": 0,
+                        "type": "integer"
                     }
                 },
                 "required": [
@@ -14303,6 +14360,23 @@
                     },
                     "last_name": {
                         "maxLength": 150,
+                        "type": "string"
+                    },
+                    "notification_email_active": {
+                        "type": "boolean"
+                    },
+                    "notification_ms_teams_active": {
+                        "type": "boolean"
+                    },
+                    "notification_ms_teams_webhook": {
+                        "maxLength": 2048,
+                        "type": "string"
+                    },
+                    "notification_slack_active": {
+                        "type": "boolean"
+                    },
+                    "notification_slack_webhook": {
+                        "maxLength": 2048,
                         "type": "string"
                     },
                     "oidc_groups_hash": {
@@ -15040,7 +15114,7 @@
     "info": {
         "description": "...",
         "title": "SecObserve",
-        "version": "1.59.2"
+        "version": "1.60.0"
     },
     "openapi": "3.0.3",
     "paths": {
@@ -15479,6 +15553,7 @@
         },
         "/api/authentication/create_user_api_token/": {
             "post": {
+                "description": "Either `username` and `password` or an OIDC token in the `Authorization` header are needed to authenticate the user. The OIDC authentication must not be older than the maximum authentication age configured in the settings.",
                 "operationId": "authentication_create_user_api_token_create",
                 "requestBody": {
                     "content": {
@@ -15509,6 +15584,7 @@
         },
         "/api/authentication/revoke_user_api_token/": {
             "post": {
+                "description": "Either `username` and `password` or an OIDC token in the `Authorization` header are needed to authenticate the user. The OIDC authentication must not be older than the maximum authentication age configured in the settings.",
                 "operationId": "authentication_revoke_user_api_token_create",
                 "requestBody": {
                     "content": {
