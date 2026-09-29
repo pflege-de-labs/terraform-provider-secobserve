@@ -55,6 +55,8 @@ for local development via `dev_overrides`.
 - A product API token's secret is returned once, at creation. It lives in
   state, any change to the resource issues a new one, and an imported token
   has no secret at all.
+- `secobserve_product_api_token` also accepts a product group id in `product`,
+  giving the token its role on every product in the group.
 - Whoever creates a product becomes an `Owner` member of it. Since Terraform
   creates products as the provider's identity, that membership exists outside
   Terraform.

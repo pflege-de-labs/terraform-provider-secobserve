@@ -393,6 +393,45 @@ resource "secobserve_product_api_token" "test" {
 	})
 }
 
+// The endpoint takes a product group id in `product` too; this proves the
+// group-scoped token survives a refresh and an import.
+func TestAccProductGroupAPITokenLifecycle(t *testing.T) {
+	group := acceptanceName("token-group")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "secobserve_product_group" "test" { name = %q }
+
+resource "secobserve_product_api_token" "test" {
+  product = secobserve_product_group.test.id
+  name    = "ci"
+  role    = "Upload"
+}`, group),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(
+						"secobserve_product_api_token.test", "product", "secobserve_product_group.test", "id"),
+					resource.TestCheckResourceAttr("secobserve_product_api_token.test", "role", "Upload"),
+					resource.TestCheckResourceAttrSet("secobserve_product_api_token.test", "token"),
+				),
+			},
+			{
+				ResourceName:            "secobserve_product_api_token.test",
+				ImportStateIdFunc:       productAPITokenImportID,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"token"},
+			},
+		},
+	})
+}
+
 // productAPITokenImportID builds the "<product id>/<token name>" import id
 // from state, since the product's id is only known post-apply.
 func productAPITokenImportID(s *terraform.State) (string, error) {
