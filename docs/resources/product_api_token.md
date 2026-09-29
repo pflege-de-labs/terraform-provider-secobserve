@@ -3,18 +3,18 @@
 page_title: "secobserve_product_api_token Resource - secobserve"
 subcategory: ""
 description: |-
-  An API token scoped to a single product, for use by CI/CD pipelines uploading scan results.
+  An API token scoped to a single product or product group, for use by CI/CD pipelines uploading scan results.
   The endpoint supports only create, list and delete, so any change replaces the token and issues a new secret. Consumers of the old value have to be updated.
-  ~> For blue/green rotation without a gap where no valid token exists, set lifecycle { create_before_destroy = true } and change name on rotation (it's unique per product, but SecObserve allows multiple tokens on the same product at once, so the new token is created before the old one is destroyed). See examples/resources/secobserve_product_api_token/rotation.tf for a worked example using the time_rotating resource to automate it.
+  ~> For blue/green rotation without a gap where no valid token exists, set lifecycle { create_before_destroy = true } and change name on rotation (it's unique per product, but SecObserve allows multiple tokens on the same product at once, so the new token is created before the old one is destroyed). See examples/resources/secobserve_product_api_token/rotation.tf for a worked example using the time_rotating resource to automate it, and product_group.tf for a token scoped to a product group.
 ---
 
 # secobserve_product_api_token (Resource)
 
-An API token scoped to a single product, for use by CI/CD pipelines uploading scan results.
+An API token scoped to a single product or product group, for use by CI/CD pipelines uploading scan results.
 
 The endpoint supports only create, list and delete, so **any change replaces the token** and issues a new secret. Consumers of the old value have to be updated.
 
-~> For blue/green rotation without a gap where no valid token exists, set `lifecycle { create_before_destroy = true }` and change `name` on rotation (it's unique per product, but SecObserve allows multiple tokens on the same product at once, so the new token is created before the old one is destroyed). See `examples/resources/secobserve_product_api_token/rotation.tf` for a worked example using the `time_rotating` resource to automate it.
+~> For blue/green rotation without a gap where no valid token exists, set `lifecycle { create_before_destroy = true }` and change `name` on rotation (it's unique per product, but SecObserve allows multiple tokens on the same product at once, so the new token is created before the old one is destroyed). See `examples/resources/secobserve_product_api_token/rotation.tf` for a worked example using the `time_rotating` resource to automate it, and `product_group.tf` for a token scoped to a product group.
 
 ## Example Usage
 
@@ -42,7 +42,7 @@ output "ci_token" {
 ### Required
 
 - `name` (String) Name of the token, at most **32** characters. Unique per product.
-- `product` (Number) Id of the product the token is scoped to. Only one token per name and product is allowed.
+- `product` (Number) Id of the product or product group the token is scoped to. A product group token holds its role on every product in the group. Only one token per name and product or product group is allowed.
 - `role` (String) Role granted to the token, in ascending order of privilege: `Reader`, `Upload`, `Writer`, `Maintainer`, `Owner`.
 
 ~> Granting or changing `Owner` requires the provider's own identity to be an owner of the product or a superuser.

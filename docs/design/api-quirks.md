@@ -251,6 +251,11 @@ worth calling out explicitly (`core/services/security_gate.py:20-24`,
   (`authorization/api/permissions_base.py:11-24`).
 - `GET /api/product_api_tokens/` requires a `product` query parameter and
   rejects a non-numeric one (`core/api/views_product.py:588-604`).
+- `product` on `/api/product_api_tokens/` accepts a product group id as well:
+  the lookup never checks `is_product_group` (`core/api/views_product.py:660-664`).
+  The token user becomes a `Product_Member` of the group
+  (`core/services/product_api_token.py:34`), so its role applies to every
+  product in the group.
 - A branch with `is_default_branch = true` cannot be deleted
   (`views_product.py:541-546`), and `product.repository_default_branch` is
   read-only: it is set as a side effect of flipping the flag on a branch
