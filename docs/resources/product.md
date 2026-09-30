@@ -67,6 +67,8 @@ resource "secobserve_product" "checkout" {
 - `assessment_approver_authorization_groups` (Set of Number) Ids of the authorization groups designated to approve assessments.
 
 ~> Each group must **already** hold at least the `Writer` role on this product or its product group, otherwise SecObserve rejects the request. Declare the corresponding `secobserve_product_authorization_group_member` first and reference its `authorization_group` so Terraform orders them correctly.
+
+The plan fails when a new resource could not hold such a membership yet, and warns when an existing membership with that role is missing. It cannot see a membership created in the same apply, so that warning is expected then.
 - `assessment_approvers` (Set of Number) Ids of the users designated to approve assessments. Use the `secobserve_user` data source to resolve usernames to ids.
 - `assessments_need_approval` (Boolean) Require a second person to approve assessments of observations.
 

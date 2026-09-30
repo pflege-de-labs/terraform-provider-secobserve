@@ -532,3 +532,25 @@ func TestProductRenameThenDestroy(t *testing.T) {
 		},
 	})
 }
+
+// A new product outside any product group has nowhere to hold an approver
+// group's membership, so SecObserve always rejects the create. The plan must
+// fail instead of the apply.
+func TestProductApproverGroupsWithoutProductGroupFailPlan(t *testing.T) {
+	newStubSecObserve(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "secobserve_product" "test" {
+  name                                     = "approvers-no-group"
+  assessment_approver_authorization_groups = [7]
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Approver groups cannot be set on create`),
+			},
+		},
+	})
+}
