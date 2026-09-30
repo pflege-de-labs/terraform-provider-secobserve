@@ -267,6 +267,12 @@ worth calling out explicitly (`core/services/security_gate.py:20-24`,
   for `retrieve`; `assessment_approvers` and
   `assessment_approver_authorization_groups` are absent from list responses
   (`serializers_product.py:403-429`). Reads must use the detail endpoint.
+- Every `assessment_approver_authorization_groups` entry must already hold
+  `Writer` or above on the product itself or its product group
+  (`serializers_product.py:153-193`). A new product group, or a new product
+  without `product_group`, has no memberships, so the create always fails.
+  `schemacommon.CheckApproverGroups` errors on that case in `ModifyPlan` and
+  only warns on a missing membership, which may be planned in the same run.
 - `Settings` is a singleton reachable only as `GET`/`PATCH
   /api/settings/{pk}/`, where `pk` is parsed and ignored. There is no POST,
   PUT or DELETE (`commons/api/views.py:90-115`). Setting
