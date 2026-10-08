@@ -197,3 +197,23 @@ func (c *Client) FindProductAuthorizationGroupMember(
 		Name:  fmt.Sprintf("%d/%d", productID, authorizationGroupID),
 	}
 }
+
+// ProductAuthorizationGroupMembersOf lists every product and product group
+// membership of an authorization group.
+func (c *Client) ProductAuthorizationGroupMembersOf(
+	ctx context.Context, authorizationGroupID int64,
+) ([]ProductAuthorizationGroupMember, error) {
+	query := url.Values{"authorization_group": {strconv.FormatInt(authorizationGroupID, 10)}}
+	members, err := List[ProductAuthorizationGroupMember](ctx, c, productAuthorizationGroupMembersPath, query)
+	if err != nil {
+		return nil, err
+	}
+	// Filtered again client-side, like FindProductAuthorizationGroupMember.
+	filtered := members[:0]
+	for _, member := range members {
+		if member.AuthorizationGroup == authorizationGroupID {
+			filtered = append(filtered, member)
+		}
+	}
+	return filtered, nil
+}

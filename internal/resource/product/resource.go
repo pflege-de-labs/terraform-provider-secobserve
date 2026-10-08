@@ -17,6 +17,7 @@ var (
 	_ resource.ResourceWithImportState    = (*productResource)(nil)
 	_ resource.ResourceWithValidateConfig = (*productResource)(nil)
 	_ resource.ResourceWithUpgradeState   = (*productResource)(nil)
+	_ resource.ResourceWithModifyPlan     = (*productResource)(nil)
 )
 
 // New returns the secobserve_product resource.

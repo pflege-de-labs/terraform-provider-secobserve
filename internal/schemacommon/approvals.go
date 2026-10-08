@@ -77,7 +77,10 @@ func AddApprovers(attributes map[string]schema.Attribute, scope string) {
 			"~> Each group must **already** hold at least the `Writer` role on this " + scope + ", otherwise " +
 			"SecObserve rejects the request. Declare the corresponding " +
 			"`secobserve_product_authorization_group_member` first and reference its " +
-			"`authorization_group` so Terraform orders them correctly.",
+			"`authorization_group` so Terraform orders them correctly.\n\n" +
+			"The plan fails when a new resource could not hold such a membership yet, and warns when an existing " +
+			"membership with that role is missing. It cannot see a membership created in the same apply, so that " +
+			"warning is expected then.",
 	}
 }
 
