@@ -13,6 +13,9 @@ import (
 )
 
 func TestVerifyInstance(t *testing.T) {
+	// Derived from SchemaVersion so Renovate bumps don't break the patch case.
+	patchVersion := client.SchemaVersion[:strings.LastIndex(client.SchemaVersion, ".")] + ".99"
+
 	tests := []struct {
 		name        string
 		me          string
@@ -31,7 +34,7 @@ func TestVerifyInstance(t *testing.T) {
 		{
 			name:        "patch releases are compatible",
 			me:          `{"id":1,"username":"admin","is_superuser":true}`,
-			version:     `{"version":"1.59.99"}`,
+			version:     `{"version":"` + patchVersion + `"}`,
 			wantNoWarns: true,
 		},
 		{
