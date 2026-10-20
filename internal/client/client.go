@@ -26,7 +26,7 @@ const (
 
 	// SchemaVersion is the SecObserve release the vendored OpenAPI schema was
 	// generated from. Compared against /api/status/version/ at configure time.
-	SchemaVersion = "1.59.2"
+	SchemaVersion = "1.60.0"
 
 	defaultTimeout = 30 * time.Second
 

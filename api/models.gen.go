@@ -4470,8 +4470,8 @@ type ApiToken struct {
 type ApiTokenCreateRequestRequest struct {
 	ExpirationDate *openapi_types.Date `json:"expiration_date,omitempty"`
 	Name           string              `json:"name"`
-	Password       string              `json:"password"`
-	Username       string              `json:"username"`
+	Password       *string             `json:"password,omitempty"`
+	Username       *string             `json:"username,omitempty"`
 }
 
 // ApiTokenCreateResponse defines model for ApiTokenCreateResponse.
@@ -4481,9 +4481,9 @@ type ApiTokenCreateResponse struct {
 
 // ApiTokenRevokeRequestRequest defines model for ApiTokenRevokeRequestRequest.
 type ApiTokenRevokeRequestRequest struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Username string `json:"username"`
+	Name     string  `json:"name"`
+	Password *string `json:"password,omitempty"`
+	Username *string `json:"username,omitempty"`
 }
 
 // ApprovalStatusEnum defines model for ApprovalStatusEnum.
@@ -4625,6 +4625,7 @@ type Branch struct {
 	Product                        int                          `json:"product"`
 	Purl                           *string                      `json:"purl,omitempty"`
 	ReviewRequiredLicensesCount    *int                         `json:"review_required_licenses_count,omitempty"`
+	SecurityGatePassed             *bool                        `json:"security_gate_passed,omitempty"`
 	UnknownLicensesCount           *int                         `json:"unknown_licenses_count,omitempty"`
 }
 
@@ -7945,6 +7946,9 @@ type PatchedSettingsRequest struct {
 	ObservationTitleNotificationSlackWebhook   *string                                                         `json:"observation_title_notification_slack_webhook,omitempty"`
 	ObservationTitleNotificationStatusList     *[]string                                                       `json:"observation_title_notification_status_list,omitempty"`
 
+	// OidcApiTokenMaxAuthenticationAge Maximum age in minutes of the OIDC authentication to create or revoke a user API token, 0 disables the check
+	OidcApiTokenMaxAuthenticationAge *int `json:"oidc_api_token_max_authentication_age,omitempty"`
+
 	// OidcClockSkew Time margin in seconds for checks of issued at, not before and expiration of OIDC tokens
 	OidcClockSkew *int `json:"oidc_clock_skew,omitempty"`
 
@@ -8000,6 +8004,9 @@ type PatchedSettingsRequest struct {
 
 	// VulnerablecodeBaseUrl Base URL of the VulnerableCode instance
 	VulnerablecodeBaseUrl *string `json:"vulnerablecode_base_url,omitempty"`
+
+	// VulnerablecodeCacheTtlHours Time to live for VulnerableCode cache in hours
+	VulnerablecodeCacheTtlHours *int `json:"vulnerablecode_cache_ttl_hours,omitempty"`
 }
 
 // PatchedSettingsRequest_ObservationTitleNotificationMinSeverity defines model for PatchedSettingsRequest.ObservationTitleNotificationMinSeverity.
@@ -8021,11 +8028,28 @@ type PatchedUserPasswordRequest struct {
 
 // PatchedUserSettingsRequest defines model for PatchedUserSettingsRequest.
 type PatchedUserSettingsRequest struct {
+	Email                        *PatchedUserSettingsRequest_Email `json:"email,omitempty"`
+	NotificationEmailActive      *bool                             `json:"notification_email_active,omitempty"`
+	NotificationMsTeamsActive    *bool                             `json:"notification_ms_teams_active,omitempty"`
+	NotificationMsTeamsWebhook   *string                           `json:"notification_ms_teams_webhook,omitempty"`
+	NotificationSlackActive      *bool                             `json:"notification_slack_active,omitempty"`
+	NotificationSlackWebhook     *string                           `json:"notification_slack_webhook,omitempty"`
 	SettingListSize              *SettingListSizeEnum              `json:"setting_list_size,omitempty"`
 	SettingMetricsTimespan       *SettingMetricsTimespanEnum       `json:"setting_metrics_timespan,omitempty"`
 	SettingPackageInfoPreference *SettingPackageInfoPreferenceEnum `json:"setting_package_info_preference,omitempty"`
 	SettingRowsPerPage           *SettingRowsPerPageEnum           `json:"setting_rows_per_page,omitempty"`
 	SettingTheme                 *SettingThemeEnum                 `json:"setting_theme,omitempty"`
+}
+
+// PatchedUserSettingsRequestEmail0 defines model for PatchedUserSettingsRequest.Email.0.
+type PatchedUserSettingsRequestEmail0 = openapi_types.Email
+
+// PatchedUserSettingsRequestEmail1 defines model for PatchedUserSettingsRequest.Email.1.
+type PatchedUserSettingsRequestEmail1 = string
+
+// PatchedUserSettingsRequest_Email defines model for PatchedUserSettingsRequest.Email.
+type PatchedUserSettingsRequest_Email struct {
+	union json.RawMessage
 }
 
 // PatchedUserUpdateRequest defines model for PatchedUserUpdateRequest.
@@ -8921,6 +8945,9 @@ type Settings struct {
 	ObservationTitleNotificationSlackWebhook   *string                                           `json:"observation_title_notification_slack_webhook,omitempty"`
 	ObservationTitleNotificationStatusList     *[]string                                         `json:"observation_title_notification_status_list,omitempty"`
 
+	// OidcApiTokenMaxAuthenticationAge Maximum age in minutes of the OIDC authentication to create or revoke a user API token, 0 disables the check
+	OidcApiTokenMaxAuthenticationAge *int `json:"oidc_api_token_max_authentication_age,omitempty"`
+
 	// OidcClockSkew Time margin in seconds for checks of issued at, not before and expiration of OIDC tokens
 	OidcClockSkew *int `json:"oidc_clock_skew,omitempty"`
 
@@ -8976,6 +9003,9 @@ type Settings struct {
 
 	// VulnerablecodeBaseUrl Base URL of the VulnerableCode instance
 	VulnerablecodeBaseUrl *string `json:"vulnerablecode_base_url,omitempty"`
+
+	// VulnerablecodeCacheTtlHours Time to live for VulnerableCode cache in hours
+	VulnerablecodeCacheTtlHours *int `json:"vulnerablecode_cache_ttl_hours,omitempty"`
 }
 
 // Settings_ObservationTitleNotificationMinSeverity defines model for Settings.ObservationTitleNotificationMinSeverity.
@@ -9037,6 +9067,11 @@ type User struct {
 	// IsSuperuser Designates that this user has all permissions without explicitly assigning them.
 	IsSuperuser                  *bool                             `json:"is_superuser,omitempty"`
 	LastName                     *string                           `json:"last_name,omitempty"`
+	NotificationEmailActive      *bool                             `json:"notification_email_active,omitempty"`
+	NotificationMsTeamsActive    *bool                             `json:"notification_ms_teams_active,omitempty"`
+	NotificationMsTeamsWebhook   *string                           `json:"notification_ms_teams_webhook,omitempty"`
+	NotificationSlackActive      *bool                             `json:"notification_slack_active,omitempty"`
+	NotificationSlackWebhook     *string                           `json:"notification_slack_webhook,omitempty"`
 	OidcGroupsHash               *string                           `json:"oidc_groups_hash,omitempty"`
 	Permissions                  *[]PermissionsEnum                `json:"permissions,omitempty"`
 	SettingListSize              *SettingListSizeEnum              `json:"setting_list_size,omitempty"`
@@ -17849,6 +17884,68 @@ func (t PatchedSettingsRequest_ObservationTitleNotificationParserType) MarshalJS
 }
 
 func (t *PatchedSettingsRequest_ObservationTitleNotificationParserType) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsPatchedUserSettingsRequestEmail0 returns the union data inside the PatchedUserSettingsRequest_Email as a PatchedUserSettingsRequestEmail0
+func (t PatchedUserSettingsRequest_Email) AsPatchedUserSettingsRequestEmail0() (PatchedUserSettingsRequestEmail0, error) {
+	var body PatchedUserSettingsRequestEmail0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPatchedUserSettingsRequestEmail0 overwrites any union data inside the PatchedUserSettingsRequest_Email as the provided PatchedUserSettingsRequestEmail0
+func (t *PatchedUserSettingsRequest_Email) FromPatchedUserSettingsRequestEmail0(v PatchedUserSettingsRequestEmail0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePatchedUserSettingsRequestEmail0 performs a merge with any union data inside the PatchedUserSettingsRequest_Email, using the provided PatchedUserSettingsRequestEmail0
+func (t *PatchedUserSettingsRequest_Email) MergePatchedUserSettingsRequestEmail0(v PatchedUserSettingsRequestEmail0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsPatchedUserSettingsRequestEmail1 returns the union data inside the PatchedUserSettingsRequest_Email as a PatchedUserSettingsRequestEmail1
+func (t PatchedUserSettingsRequest_Email) AsPatchedUserSettingsRequestEmail1() (PatchedUserSettingsRequestEmail1, error) {
+	var body PatchedUserSettingsRequestEmail1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPatchedUserSettingsRequestEmail1 overwrites any union data inside the PatchedUserSettingsRequest_Email as the provided PatchedUserSettingsRequestEmail1
+func (t *PatchedUserSettingsRequest_Email) FromPatchedUserSettingsRequestEmail1(v PatchedUserSettingsRequestEmail1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePatchedUserSettingsRequestEmail1 performs a merge with any union data inside the PatchedUserSettingsRequest_Email, using the provided PatchedUserSettingsRequestEmail1
+func (t *PatchedUserSettingsRequest_Email) MergePatchedUserSettingsRequestEmail1(v PatchedUserSettingsRequestEmail1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t PatchedUserSettingsRequest_Email) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *PatchedUserSettingsRequest_Email) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }
