@@ -113,6 +113,33 @@ func (e ComponentTypeEnum) Valid() bool {
 	}
 }
 
+// Defines values for DateFormatEnum.
+const (
+	BROWSER DateFormatEnum = "BROWSER"
+	DOTTED  DateFormatEnum = "DOTTED"
+	ISO8601 DateFormatEnum = "ISO8601"
+	UK      DateFormatEnum = "UK"
+	US      DateFormatEnum = "US"
+)
+
+// Valid indicates whether the value is a known member of the DateFormatEnum enum.
+func (e DateFormatEnum) Valid() bool {
+	switch e {
+	case BROWSER:
+		return true
+	case DOTTED:
+		return true
+	case ISO8601:
+		return true
+	case UK:
+		return true
+	case US:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for EvaluationResultEnum.
 const (
 	EvaluationResultEnumAllowed        EvaluationResultEnum = "Allowed"
@@ -1505,6 +1532,7 @@ func (e LicenseComponentIdsListParamsEvaluationResult) Valid() bool {
 // Defines values for LicenseComponentIdsListParamsOrdering.
 const (
 	LicenseComponentIdsListParamsOrderingBranchName                      LicenseComponentIdsListParamsOrdering = "branch_name"
+	LicenseComponentIdsListParamsOrderingComponentNameVersion            LicenseComponentIdsListParamsOrdering = "component_name_version"
 	LicenseComponentIdsListParamsOrderingComponentNameVersionType        LicenseComponentIdsListParamsOrdering = "component_name_version_type"
 	LicenseComponentIdsListParamsOrderingComponentPurlType               LicenseComponentIdsListParamsOrdering = "component_purl_type"
 	LicenseComponentIdsListParamsOrderingComponentType                   LicenseComponentIdsListParamsOrdering = "component_type"
@@ -1516,6 +1544,7 @@ const (
 	LicenseComponentIdsListParamsOrderingLicenseDataSpdxId               LicenseComponentIdsListParamsOrdering = "license_data.spdx_id"
 	LicenseComponentIdsListParamsOrderingManualConcludedComment          LicenseComponentIdsListParamsOrdering = "manual_concluded_comment"
 	LicenseComponentIdsListParamsOrderingMinusBranchName                 LicenseComponentIdsListParamsOrdering = "-branch_name"
+	LicenseComponentIdsListParamsOrderingMinusComponentNameVersion       LicenseComponentIdsListParamsOrdering = "-component_name_version"
 	LicenseComponentIdsListParamsOrderingMinusComponentNameVersionType   LicenseComponentIdsListParamsOrdering = "-component_name_version_type"
 	LicenseComponentIdsListParamsOrderingMinusComponentPurlType          LicenseComponentIdsListParamsOrdering = "-component_purl_type"
 	LicenseComponentIdsListParamsOrderingMinusComponentType              LicenseComponentIdsListParamsOrdering = "-component_type"
@@ -1539,6 +1568,8 @@ func (e LicenseComponentIdsListParamsOrdering) Valid() bool {
 	switch e {
 	case LicenseComponentIdsListParamsOrderingBranchName:
 		return true
+	case LicenseComponentIdsListParamsOrderingComponentNameVersion:
+		return true
 	case LicenseComponentIdsListParamsOrderingComponentNameVersionType:
 		return true
 	case LicenseComponentIdsListParamsOrderingComponentPurlType:
@@ -1560,6 +1591,8 @@ func (e LicenseComponentIdsListParamsOrdering) Valid() bool {
 	case LicenseComponentIdsListParamsOrderingManualConcludedComment:
 		return true
 	case LicenseComponentIdsListParamsOrderingMinusBranchName:
+		return true
+	case LicenseComponentIdsListParamsOrderingMinusComponentNameVersion:
 		return true
 	case LicenseComponentIdsListParamsOrderingMinusComponentNameVersionType:
 		return true
@@ -1679,6 +1712,7 @@ func (e LicenseComponentsListParamsEvaluationResult) Valid() bool {
 // Defines values for LicenseComponentsListParamsOrdering.
 const (
 	LicenseComponentsListParamsOrderingBranchName                      LicenseComponentsListParamsOrdering = "branch_name"
+	LicenseComponentsListParamsOrderingComponentNameVersion            LicenseComponentsListParamsOrdering = "component_name_version"
 	LicenseComponentsListParamsOrderingComponentNameVersionType        LicenseComponentsListParamsOrdering = "component_name_version_type"
 	LicenseComponentsListParamsOrderingComponentPurlType               LicenseComponentsListParamsOrdering = "component_purl_type"
 	LicenseComponentsListParamsOrderingComponentType                   LicenseComponentsListParamsOrdering = "component_type"
@@ -1690,6 +1724,7 @@ const (
 	LicenseComponentsListParamsOrderingLicenseDataSpdxId               LicenseComponentsListParamsOrdering = "license_data.spdx_id"
 	LicenseComponentsListParamsOrderingManualConcludedComment          LicenseComponentsListParamsOrdering = "manual_concluded_comment"
 	LicenseComponentsListParamsOrderingMinusBranchName                 LicenseComponentsListParamsOrdering = "-branch_name"
+	LicenseComponentsListParamsOrderingMinusComponentNameVersion       LicenseComponentsListParamsOrdering = "-component_name_version"
 	LicenseComponentsListParamsOrderingMinusComponentNameVersionType   LicenseComponentsListParamsOrdering = "-component_name_version_type"
 	LicenseComponentsListParamsOrderingMinusComponentPurlType          LicenseComponentsListParamsOrdering = "-component_purl_type"
 	LicenseComponentsListParamsOrderingMinusComponentType              LicenseComponentsListParamsOrdering = "-component_type"
@@ -1713,6 +1748,8 @@ func (e LicenseComponentsListParamsOrdering) Valid() bool {
 	switch e {
 	case LicenseComponentsListParamsOrderingBranchName:
 		return true
+	case LicenseComponentsListParamsOrderingComponentNameVersion:
+		return true
 	case LicenseComponentsListParamsOrderingComponentNameVersionType:
 		return true
 	case LicenseComponentsListParamsOrderingComponentPurlType:
@@ -1734,6 +1771,8 @@ func (e LicenseComponentsListParamsOrdering) Valid() bool {
 	case LicenseComponentsListParamsOrderingManualConcludedComment:
 		return true
 	case LicenseComponentsListParamsOrderingMinusBranchName:
+		return true
+	case LicenseComponentsListParamsOrderingMinusComponentNameVersion:
 		return true
 	case LicenseComponentsListParamsOrderingMinusComponentNameVersionType:
 		return true
@@ -4588,6 +4627,7 @@ type BackgroundTaskInflight struct {
 // BackgroundTaskStatistics defines model for BackgroundTaskStatistics.
 type BackgroundTaskStatistics struct {
 	Counts     BackgroundTaskCounts      `json:"counts"`
+	Pending    int                       `json:"pending"`
 	Registered []BackgroundTaskBreakdown `json:"registered"`
 	Running    []BackgroundTaskInflight  `json:"running"`
 	Throughput BackgroundTaskThroughput  `json:"throughput"`
@@ -4758,8 +4798,8 @@ type ComponentTypeEnum string
 type ConcludedLicense struct {
 	ComponentName                    string         `json:"component_name"`
 	ComponentNameVersion             *string        `json:"component_name_version,omitempty"`
-	ComponentPurlType                string         `json:"component_purl_type"`
-	ComponentVersion                 string         `json:"component_version"`
+	ComponentPurlType                *string        `json:"component_purl_type,omitempty"`
+	ComponentVersion                 *string        `json:"component_version,omitempty"`
 	Id                               *int           `json:"id,omitempty"`
 	LastUpdated                      *time.Time     `json:"last_updated,omitempty"`
 	ManualConcludedLicenseExpression *string        `json:"manual_concluded_license_expression,omitempty"`
@@ -4776,8 +4816,8 @@ type ConcludedLicense struct {
 type ConcludedLicenseList struct {
 	ComponentName                    string                        `json:"component_name"`
 	ComponentNameVersion             *string                       `json:"component_name_version,omitempty"`
-	ComponentPurlType                string                        `json:"component_purl_type"`
-	ComponentVersion                 string                        `json:"component_version"`
+	ComponentPurlType                *string                       `json:"component_purl_type,omitempty"`
+	ComponentVersion                 *string                       `json:"component_version,omitempty"`
 	Id                               *int                          `json:"id,omitempty"`
 	LastUpdated                      *time.Time                    `json:"last_updated,omitempty"`
 	ManualConcludedLicenseExpression *string                       `json:"manual_concluded_license_expression,omitempty"`
@@ -4844,6 +4884,9 @@ type CycloneDXVulnerability struct {
 	Id        *int   `json:"id,omitempty"`
 	Name      string `json:"name"`
 }
+
+// DateFormatEnum defines model for DateFormatEnum.
+type DateFormatEnum string
 
 // EvaluationResultEnum defines model for EvaluationResultEnum.
 type EvaluationResultEnum string
@@ -5619,7 +5662,6 @@ type NestedProduct struct {
 	Id                                           *int                                              `json:"id,omitempty"`
 	IsProductGroup                               *bool                                             `json:"is_product_group,omitempty"`
 	IssueTrackerActive                           *bool                                             `json:"issue_tracker_active,omitempty"`
-	IssueTrackerApiKey                           *string                                           `json:"issue_tracker_api_key,omitempty"`
 	IssueTrackerBaseUrl                          *string                                           `json:"issue_tracker_base_url,omitempty"`
 	IssueTrackerIssueType                        *string                                           `json:"issue_tracker_issue_type,omitempty"`
 	IssueTrackerLabels                           *string                                           `json:"issue_tracker_labels,omitempty"`
@@ -5709,7 +5751,6 @@ type NestedProductList struct {
 	HasSource                                    *bool                                                 `json:"has_source,omitempty"`
 	Id                                           *int                                                  `json:"id,omitempty"`
 	IssueTrackerActive                           *bool                                                 `json:"issue_tracker_active,omitempty"`
-	IssueTrackerApiKey                           *string                                               `json:"issue_tracker_api_key,omitempty"`
 	IssueTrackerBaseUrl                          *string                                               `json:"issue_tracker_base_url,omitempty"`
 	IssueTrackerIssueType                        *string                                               `json:"issue_tracker_issue_type,omitempty"`
 	IssueTrackerLabels                           *string                                               `json:"issue_tracker_labels,omitempty"`
@@ -5795,7 +5836,6 @@ type NestedProductRequest struct {
 	HasSource                                    *bool                                                    `json:"has_source,omitempty"`
 	IsProductGroup                               *bool                                                    `json:"is_product_group,omitempty"`
 	IssueTrackerActive                           *bool                                                    `json:"issue_tracker_active,omitempty"`
-	IssueTrackerApiKey                           *string                                                  `json:"issue_tracker_api_key,omitempty"`
 	IssueTrackerBaseUrl                          *string                                                  `json:"issue_tracker_base_url,omitempty"`
 	IssueTrackerIssueType                        *string                                                  `json:"issue_tracker_issue_type,omitempty"`
 	IssueTrackerLabels                           *string                                                  `json:"issue_tracker_labels,omitempty"`
@@ -6476,10 +6516,17 @@ type ObservationLog_VexJustification struct {
 
 // ObservationLogBulkApprovalRequest defines model for ObservationLogBulkApprovalRequest.
 type ObservationLogBulkApprovalRequest struct {
-	AssessmentStatus      *ApprovalStatusEnum `json:"assessment_status,omitempty"`
-	ObservationLogComment *string             `json:"observation_log_comment,omitempty"`
-	ObservationLogs       []int               `json:"observation_logs"`
-	RejectionRemark       *string             `json:"rejection_remark,omitempty"`
+	AssessmentStatus               *ApprovalStatusEnum                                               `json:"assessment_status,omitempty"`
+	ObservationLogComment          *string                                                           `json:"observation_log_comment,omitempty"`
+	ObservationLogVexJustification *ObservationLogBulkApprovalRequest_ObservationLogVexJustification `json:"observation_log_vex_justification,omitempty"`
+	ObservationLogVexRemediations  interface{}                                                       `json:"observation_log_vex_remediations,omitempty"`
+	ObservationLogs                []int                                                             `json:"observation_logs"`
+	RejectionRemark                *string                                                           `json:"rejection_remark,omitempty"`
+}
+
+// ObservationLogBulkApprovalRequest_ObservationLogVexJustification defines model for ObservationLogBulkApprovalRequest.ObservationLogVexJustification.
+type ObservationLogBulkApprovalRequest_ObservationLogVexJustification struct {
+	union json.RawMessage
 }
 
 // ObservationLogList defines model for ObservationLogList.
@@ -7879,6 +7926,9 @@ type PatchedSettingsRequest struct {
 	// BranchHousekeepingKeepInactiveDays Days before incative branches and their observations are deleted
 	BranchHousekeepingKeepInactiveDays *int `json:"branch_housekeeping_keep_inactive_days,omitempty"`
 
+	// DateFormat Format to display dates and times in the frontend
+	DateFormat *DateFormatEnum `json:"date_format,omitempty"`
+
 	// EmailFrom From address for sending email notifications
 	EmailFrom *string `json:"email_from,omitempty"`
 
@@ -8877,6 +8927,9 @@ type Settings struct {
 	// BranchHousekeepingKeepInactiveDays Days before incative branches and their observations are deleted
 	BranchHousekeepingKeepInactiveDays *int `json:"branch_housekeeping_keep_inactive_days,omitempty"`
 
+	// DateFormat Format to display dates and times in the frontend
+	DateFormat *DateFormatEnum `json:"date_format,omitempty"`
+
 	// EmailFrom From address for sending email notifications
 	EmailFrom *string `json:"email_from,omitempty"`
 
@@ -9034,6 +9087,8 @@ type Status82cEnum string
 
 // StatusSettings defines model for StatusSettings.
 type StatusSettings struct {
+	BackgroundTasksTimeZone  string   `json:"background_tasks_time_zone"`
+	DateFormat               string   `json:"date_format"`
 	Features                 []string `json:"features"`
 	RiskAcceptanceExpiryDays int      `json:"risk_acceptance_expiry_days"`
 	VexJustificationStyle    string   `json:"vex_justification_style"`
@@ -9306,10 +9361,10 @@ type VexJustificationStyleEnum string
 
 // VulnerabilityCheck defines model for VulnerabilityCheck.
 type VulnerabilityCheck struct {
-	ApiConfigurationName           string     `json:"api_configuration_name"`
+	ApiConfigurationName           *string    `json:"api_configuration_name,omitempty"`
 	Branch                         *int       `json:"branch,omitempty"`
 	BranchName                     *string    `json:"branch_name,omitempty"`
-	Filename                       string     `json:"filename"`
+	Filename                       *string    `json:"filename,omitempty"`
 	FirstImport                    *time.Time `json:"first_import,omitempty"`
 	Id                             *int       `json:"id,omitempty"`
 	LastImport                     *time.Time `json:"last_import,omitempty"`
@@ -9479,6 +9534,7 @@ type ComponentNamesListParams struct {
 	HasActiveObservations   *bool   `form:"has_active_observations,omitempty" json:"has_active_observations,omitempty"`
 	HasInactiveObservations *bool   `form:"has_inactive_observations,omitempty" json:"has_inactive_observations,omitempty"`
 	HasLicenses             *bool   `form:"has_licenses,omitempty" json:"has_licenses,omitempty"`
+	Name                    *string `form:"name,omitempty" json:"name,omitempty"`
 	NameVersion             *string `form:"name_version,omitempty" json:"name_version,omitempty"`
 
 	// Ordering Ordering
@@ -9494,8 +9550,9 @@ type ComponentNamesListParams struct {
 	PurlType      *string `form:"purl_type,omitempty" json:"purl_type,omitempty"`
 
 	// Search A search term.
-	Search *string `form:"search,omitempty" json:"search,omitempty"`
-	Type   *string `form:"type,omitempty" json:"type,omitempty"`
+	Search  *string `form:"search,omitempty" json:"search,omitempty"`
+	Type    *string `form:"type,omitempty" json:"type,omitempty"`
+	Version *string `form:"version,omitempty" json:"version,omitempty"`
 }
 
 // ComponentNamesListParamsOrdering defines parameters for ComponentNamesList.
@@ -9506,6 +9563,7 @@ type ComponentsListParams struct {
 	HasActiveObservations   *bool   `form:"has_active_observations,omitempty" json:"has_active_observations,omitempty"`
 	HasInactiveObservations *bool   `form:"has_inactive_observations,omitempty" json:"has_inactive_observations,omitempty"`
 	HasLicenses             *bool   `form:"has_licenses,omitempty" json:"has_licenses,omitempty"`
+	Name                    *string `form:"name,omitempty" json:"name,omitempty"`
 	NameVersion             *string `form:"name_version,omitempty" json:"name_version,omitempty"`
 
 	// Ordering Ordering
@@ -9521,8 +9579,9 @@ type ComponentsListParams struct {
 	PurlType      *string `form:"purl_type,omitempty" json:"purl_type,omitempty"`
 
 	// Search A search term.
-	Search *string `form:"search,omitempty" json:"search,omitempty"`
-	Type   *string `form:"type,omitempty" json:"type,omitempty"`
+	Search  *string `form:"search,omitempty" json:"search,omitempty"`
+	Type    *string `form:"type,omitempty" json:"type,omitempty"`
+	Version *string `form:"version,omitempty" json:"version,omitempty"`
 }
 
 // ComponentsListParamsOrdering defines parameters for ComponentsList.
@@ -9632,9 +9691,11 @@ type LicenseComponentIdsListParams struct {
 	BranchName                 *string                                        `form:"branch_name,omitempty" json:"branch_name,omitempty"`
 	BranchNameExact            *string                                        `form:"branch_name_exact,omitempty" json:"branch_name_exact,omitempty"`
 	Component                  *int                                           `form:"component,omitempty" json:"component,omitempty"`
+	ComponentName              *string                                        `form:"component_name,omitempty" json:"component_name,omitempty"`
 	ComponentNameVersion       *string                                        `form:"component_name_version,omitempty" json:"component_name_version,omitempty"`
 	ComponentPurlType          *string                                        `form:"component_purl_type,omitempty" json:"component_purl_type,omitempty"`
 	ComponentType              *LicenseComponentIdsListParamsComponentType    `form:"component_type,omitempty" json:"component_type,omitempty"`
+	ComponentVersion           *string                                        `form:"component_version,omitempty" json:"component_version,omitempty"`
 	EffectiveLicenseExpression *string                                        `form:"effective_license_expression,omitempty" json:"effective_license_expression,omitempty"`
 	EffectiveLicenseName       *string                                        `form:"effective_license_name,omitempty" json:"effective_license_name,omitempty"`
 	EffectiveLicenseNameExact  *string                                        `form:"effective_license_name_exact,omitempty" json:"effective_license_name_exact,omitempty"`
@@ -9674,9 +9735,11 @@ type LicenseComponentsListParams struct {
 	BranchName                 *string                                      `form:"branch_name,omitempty" json:"branch_name,omitempty"`
 	BranchNameExact            *string                                      `form:"branch_name_exact,omitempty" json:"branch_name_exact,omitempty"`
 	Component                  *int                                         `form:"component,omitempty" json:"component,omitempty"`
+	ComponentName              *string                                      `form:"component_name,omitempty" json:"component_name,omitempty"`
 	ComponentNameVersion       *string                                      `form:"component_name_version,omitempty" json:"component_name_version,omitempty"`
 	ComponentPurlType          *string                                      `form:"component_purl_type,omitempty" json:"component_purl_type,omitempty"`
 	ComponentType              *LicenseComponentsListParamsComponentType    `form:"component_type,omitempty" json:"component_type,omitempty"`
+	ComponentVersion           *string                                      `form:"component_version,omitempty" json:"component_version,omitempty"`
 	EffectiveLicenseExpression *string                                      `form:"effective_license_expression,omitempty" json:"effective_license_expression,omitempty"`
 	EffectiveLicenseName       *string                                      `form:"effective_license_name,omitempty" json:"effective_license_name,omitempty"`
 	EffectiveLicenseNameExact  *string                                      `form:"effective_license_name_exact,omitempty" json:"effective_license_name_exact,omitempty"`
@@ -9975,6 +10038,8 @@ type ObservationLogsListParams struct {
 	AssessmentStatus *ObservationLogsListParamsAssessmentStatus `form:"assessment_status,omitempty" json:"assessment_status,omitempty"`
 	Branch           *int                                       `form:"branch,omitempty" json:"branch,omitempty"`
 	BranchName       *string                                    `form:"branch_name,omitempty" json:"branch_name,omitempty"`
+	CreatedAfter     *time.Time                                 `form:"created_after,omitempty" json:"created_after,omitempty"`
+	CreatedBefore    *time.Time                                 `form:"created_before,omitempty" json:"created_before,omitempty"`
 	Observation      *int                                       `form:"observation,omitempty" json:"observation,omitempty"`
 	ObservationTitle *string                                    `form:"observation_title,omitempty" json:"observation_title,omitempty"`
 
@@ -9983,6 +10048,7 @@ type ObservationLogsListParams struct {
 	Ordering                          *[]ObservationLogsListParamsOrdering `form:"ordering,omitempty" json:"ordering,omitempty"`
 	OriginCloudQualifiedResource      *string                              `form:"origin_cloud_qualified_resource,omitempty" json:"origin_cloud_qualified_resource,omitempty"`
 	OriginComponentNameVersion        *string                              `form:"origin_component_name_version,omitempty" json:"origin_component_name_version,omitempty"`
+	OriginComponentPurlType           *string                              `form:"origin_component_purl_type,omitempty" json:"origin_component_purl_type,omitempty"`
 	OriginDockerImageNameTagShort     *string                              `form:"origin_docker_image_name_tag_short,omitempty" json:"origin_docker_image_name_tag_short,omitempty"`
 	OriginEndpointHostname            *string                              `form:"origin_endpoint_hostname,omitempty" json:"origin_endpoint_hostname,omitempty"`
 	OriginKubernetesQualifiedResource *string                              `form:"origin_kubernetes_qualified_resource,omitempty" json:"origin_kubernetes_qualified_resource,omitempty"`
@@ -9994,9 +10060,10 @@ type ObservationLogsListParams struct {
 	Page *int `form:"page,omitempty" json:"page,omitempty"`
 
 	// PageSize Number of results to return per page.
-	PageSize     *int `form:"page_size,omitempty" json:"page_size,omitempty"`
-	Product      *int `form:"product,omitempty" json:"product,omitempty"`
-	ProductGroup *int `form:"product_group,omitempty" json:"product_group,omitempty"`
+	PageSize     *int    `form:"page_size,omitempty" json:"page_size,omitempty"`
+	Product      *int    `form:"product,omitempty" json:"product,omitempty"`
+	ProductGroup *int    `form:"product_group,omitempty" json:"product_group,omitempty"`
+	Scanner      *string `form:"scanner,omitempty" json:"scanner,omitempty"`
 
 	// Search A search term.
 	Search   *string                            `form:"search,omitempty" json:"search,omitempty"`
@@ -10019,16 +10086,21 @@ type ObservationLogsListParamsStatus string
 
 // ObservationTitlesListParams defines parameters for ObservationTitlesList.
 type ObservationTitlesListParams struct {
-	Age                    interface{}                                   `form:"age,omitempty" json:"age,omitempty"`
-	ApiConfigurationName   *string                                       `form:"api_configuration_name,omitempty" json:"api_configuration_name,omitempty"`
-	Branch                 *int                                          `form:"branch,omitempty" json:"branch,omitempty"`
-	BranchName             *string                                       `form:"branch_name,omitempty" json:"branch_name,omitempty"`
-	CurrentPriority        *int                                          `form:"current_priority,omitempty" json:"current_priority,omitempty"`
-	CurrentSeverity        *[]ObservationTitlesListParamsCurrentSeverity `form:"current_severity,omitempty" json:"current_severity,omitempty"`
-	CurrentStatus          *[]ObservationTitlesListParamsCurrentStatus   `form:"current_status,omitempty" json:"current_status,omitempty"`
-	CveKnownExploited      *string                                       `form:"cve_known_exploited,omitempty" json:"cve_known_exploited,omitempty"`
-	FixAvailable           *bool                                         `form:"fix_available,omitempty" json:"fix_available,omitempty"`
-	HasPotentialDuplicates *bool                                         `form:"has_potential_duplicates,omitempty" json:"has_potential_duplicates,omitempty"`
+	Age                      interface{}                                   `form:"age,omitempty" json:"age,omitempty"`
+	ApiConfigurationName     *string                                       `form:"api_configuration_name,omitempty" json:"api_configuration_name,omitempty"`
+	Branch                   *int                                          `form:"branch,omitempty" json:"branch,omitempty"`
+	BranchName               *string                                       `form:"branch_name,omitempty" json:"branch_name,omitempty"`
+	CreatedAfter             *time.Time                                    `form:"created_after,omitempty" json:"created_after,omitempty"`
+	CreatedBefore            *time.Time                                    `form:"created_before,omitempty" json:"created_before,omitempty"`
+	CurrentPriority          *int                                          `form:"current_priority,omitempty" json:"current_priority,omitempty"`
+	CurrentSeverity          *[]ObservationTitlesListParamsCurrentSeverity `form:"current_severity,omitempty" json:"current_severity,omitempty"`
+	CurrentStatus            *[]ObservationTitlesListParamsCurrentStatus   `form:"current_status,omitempty" json:"current_status,omitempty"`
+	CveKnownExploited        *string                                       `form:"cve_known_exploited,omitempty" json:"cve_known_exploited,omitempty"`
+	DefaultBranch            *string                                       `form:"default_branch,omitempty" json:"default_branch,omitempty"`
+	FixAvailable             *bool                                         `form:"fix_available,omitempty" json:"fix_available,omitempty"`
+	HasPotentialDuplicates   *bool                                         `form:"has_potential_duplicates,omitempty" json:"has_potential_duplicates,omitempty"`
+	LastObservationLogAfter  *time.Time                                    `form:"last_observation_log_after,omitempty" json:"last_observation_log_after,omitempty"`
+	LastObservationLogBefore *time.Time                                    `form:"last_observation_log_before,omitempty" json:"last_observation_log_before,omitempty"`
 
 	// Ordering Ordering
 	//
@@ -10075,16 +10147,21 @@ type ObservationTitlesListParamsOrdering string
 
 // ObservationsListParams defines parameters for ObservationsList.
 type ObservationsListParams struct {
-	Age                    interface{}                              `form:"age,omitempty" json:"age,omitempty"`
-	ApiConfigurationName   *string                                  `form:"api_configuration_name,omitempty" json:"api_configuration_name,omitempty"`
-	Branch                 *int                                     `form:"branch,omitempty" json:"branch,omitempty"`
-	BranchName             *string                                  `form:"branch_name,omitempty" json:"branch_name,omitempty"`
-	CurrentPriority        *int                                     `form:"current_priority,omitempty" json:"current_priority,omitempty"`
-	CurrentSeverity        *[]ObservationsListParamsCurrentSeverity `form:"current_severity,omitempty" json:"current_severity,omitempty"`
-	CurrentStatus          *[]ObservationsListParamsCurrentStatus   `form:"current_status,omitempty" json:"current_status,omitempty"`
-	CveKnownExploited      *string                                  `form:"cve_known_exploited,omitempty" json:"cve_known_exploited,omitempty"`
-	FixAvailable           *bool                                    `form:"fix_available,omitempty" json:"fix_available,omitempty"`
-	HasPotentialDuplicates *bool                                    `form:"has_potential_duplicates,omitempty" json:"has_potential_duplicates,omitempty"`
+	Age                      interface{}                              `form:"age,omitempty" json:"age,omitempty"`
+	ApiConfigurationName     *string                                  `form:"api_configuration_name,omitempty" json:"api_configuration_name,omitempty"`
+	Branch                   *int                                     `form:"branch,omitempty" json:"branch,omitempty"`
+	BranchName               *string                                  `form:"branch_name,omitempty" json:"branch_name,omitempty"`
+	CreatedAfter             *time.Time                               `form:"created_after,omitempty" json:"created_after,omitempty"`
+	CreatedBefore            *time.Time                               `form:"created_before,omitempty" json:"created_before,omitempty"`
+	CurrentPriority          *int                                     `form:"current_priority,omitempty" json:"current_priority,omitempty"`
+	CurrentSeverity          *[]ObservationsListParamsCurrentSeverity `form:"current_severity,omitempty" json:"current_severity,omitempty"`
+	CurrentStatus            *[]ObservationsListParamsCurrentStatus   `form:"current_status,omitempty" json:"current_status,omitempty"`
+	CveKnownExploited        *string                                  `form:"cve_known_exploited,omitempty" json:"cve_known_exploited,omitempty"`
+	DefaultBranch            *string                                  `form:"default_branch,omitempty" json:"default_branch,omitempty"`
+	FixAvailable             *bool                                    `form:"fix_available,omitempty" json:"fix_available,omitempty"`
+	HasPotentialDuplicates   *bool                                    `form:"has_potential_duplicates,omitempty" json:"has_potential_duplicates,omitempty"`
+	LastObservationLogAfter  *time.Time                               `form:"last_observation_log_after,omitempty" json:"last_observation_log_after,omitempty"`
+	LastObservationLogBefore *time.Time                               `form:"last_observation_log_before,omitempty" json:"last_observation_log_before,omitempty"`
 
 	// Ordering Ordering
 	//
@@ -10514,7 +10591,8 @@ type UsersListParamsOrdering string
 
 // VexCsafListParams defines parameters for VexCsafList.
 type VexCsafListParams struct {
-	DocumentIdPrefix *string `form:"document_id_prefix,omitempty" json:"document_id_prefix,omitempty"`
+	BranchesBranchName *string `form:"branches__branch__name,omitempty" json:"branches__branch__name,omitempty"`
+	DocumentIdPrefix   *string `form:"document_id_prefix,omitempty" json:"document_id_prefix,omitempty"`
 
 	// Ordering Ordering
 	//
@@ -10560,8 +10638,9 @@ type VexCsafVulnerabilitiesListParams struct {
 
 // VexCyclonedxListParams defines parameters for VexCyclonedxList.
 type VexCyclonedxListParams struct {
-	Author           *string `form:"author,omitempty" json:"author,omitempty"`
-	DocumentIdPrefix *string `form:"document_id_prefix,omitempty" json:"document_id_prefix,omitempty"`
+	Author             *string `form:"author,omitempty" json:"author,omitempty"`
+	BranchesBranchName *string `form:"branches__branch__name,omitempty" json:"branches__branch__name,omitempty"`
+	DocumentIdPrefix   *string `form:"document_id_prefix,omitempty" json:"document_id_prefix,omitempty"`
 
 	// Ordering Ordering
 	//
@@ -10605,8 +10684,9 @@ type VexCyclonedxVulnerabilitiesListParams struct {
 
 // VexOpenvexListParams defines parameters for VexOpenvexList.
 type VexOpenvexListParams struct {
-	Author           *string `form:"author,omitempty" json:"author,omitempty"`
-	DocumentIdPrefix *string `form:"document_id_prefix,omitempty" json:"document_id_prefix,omitempty"`
+	Author             *string `form:"author,omitempty" json:"author,omitempty"`
+	BranchesBranchName *string `form:"branches__branch__name,omitempty" json:"branches__branch__name,omitempty"`
+	DocumentIdPrefix   *string `form:"document_id_prefix,omitempty" json:"document_id_prefix,omitempty"`
 
 	// Ordering Ordering
 	//
@@ -16148,6 +16228,68 @@ func (t ObservationLog_VexJustification) MarshalJSON() ([]byte, error) {
 }
 
 func (t *ObservationLog_VexJustification) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsVexJustificationEnum returns the union data inside the ObservationLogBulkApprovalRequest_ObservationLogVexJustification as a VexJustificationEnum
+func (t ObservationLogBulkApprovalRequest_ObservationLogVexJustification) AsVexJustificationEnum() (VexJustificationEnum, error) {
+	var body VexJustificationEnum
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromVexJustificationEnum overwrites any union data inside the ObservationLogBulkApprovalRequest_ObservationLogVexJustification as the provided VexJustificationEnum
+func (t *ObservationLogBulkApprovalRequest_ObservationLogVexJustification) FromVexJustificationEnum(v VexJustificationEnum) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeVexJustificationEnum performs a merge with any union data inside the ObservationLogBulkApprovalRequest_ObservationLogVexJustification, using the provided VexJustificationEnum
+func (t *ObservationLogBulkApprovalRequest_ObservationLogVexJustification) MergeVexJustificationEnum(v VexJustificationEnum) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsBlankEnum returns the union data inside the ObservationLogBulkApprovalRequest_ObservationLogVexJustification as a BlankEnum
+func (t ObservationLogBulkApprovalRequest_ObservationLogVexJustification) AsBlankEnum() (BlankEnum, error) {
+	var body BlankEnum
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromBlankEnum overwrites any union data inside the ObservationLogBulkApprovalRequest_ObservationLogVexJustification as the provided BlankEnum
+func (t *ObservationLogBulkApprovalRequest_ObservationLogVexJustification) FromBlankEnum(v BlankEnum) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeBlankEnum performs a merge with any union data inside the ObservationLogBulkApprovalRequest_ObservationLogVexJustification, using the provided BlankEnum
+func (t *ObservationLogBulkApprovalRequest_ObservationLogVexJustification) MergeBlankEnum(v BlankEnum) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ObservationLogBulkApprovalRequest_ObservationLogVexJustification) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ObservationLogBulkApprovalRequest_ObservationLogVexJustification) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

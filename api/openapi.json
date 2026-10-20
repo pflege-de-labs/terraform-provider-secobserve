@@ -723,6 +723,9 @@
                     "counts": {
                         "$ref": "#/components/schemas/BackgroundTaskCounts"
                     },
+                    "pending": {
+                        "type": "integer"
+                    },
                     "registered": {
                         "items": {
                             "$ref": "#/components/schemas/BackgroundTaskBreakdown"
@@ -741,6 +744,7 @@
                 },
                 "required": [
                     "counts",
+                    "pending",
                     "registered",
                     "running",
                     "throughput"
@@ -1349,10 +1353,12 @@
                         "type": "string"
                     },
                     "component_purl_type": {
+                        "default": "",
                         "maxLength": 16,
                         "type": "string"
                     },
                     "component_version": {
+                        "default": "",
                         "maxLength": 255,
                         "type": "string"
                     },
@@ -1407,8 +1413,6 @@
                 "required": [
                     "component_name",
                     "component_name_version",
-                    "component_purl_type",
-                    "component_version",
                     "id",
                     "last_updated",
                     "manual_concluded_spdx_license_id",
@@ -1430,10 +1434,12 @@
                         "type": "string"
                     },
                     "component_purl_type": {
+                        "default": "",
                         "maxLength": 16,
                         "type": "string"
                     },
                     "component_version": {
+                        "default": "",
                         "maxLength": 255,
                         "type": "string"
                     },
@@ -1488,8 +1494,6 @@
                 "required": [
                     "component_name",
                     "component_name_version",
-                    "component_purl_type",
-                    "component_version",
                     "id",
                     "last_updated",
                     "manual_concluded_spdx_license_id",
@@ -1690,6 +1694,16 @@
                     "name"
                 ],
                 "type": "object"
+            },
+            "DateFormatEnum": {
+                "enum": [
+                    "BROWSER",
+                    "ISO8601",
+                    "UK",
+                    "US",
+                    "DOTTED"
+                ],
+                "type": "string"
             },
             "EvaluationResultEnum": {
                 "enum": [
@@ -4221,10 +4235,6 @@
                     "issue_tracker_active": {
                         "type": "boolean"
                     },
-                    "issue_tracker_api_key": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
                     "issue_tracker_base_url": {
                         "maxLength": 255,
                         "type": "string"
@@ -4520,10 +4530,6 @@
                     "issue_tracker_active": {
                         "type": "boolean"
                     },
-                    "issue_tracker_api_key": {
-                        "maxLength": 255,
-                        "type": "string"
-                    },
                     "issue_tracker_base_url": {
                         "maxLength": 255,
                         "type": "string"
@@ -4793,10 +4799,6 @@
                     },
                     "issue_tracker_active": {
                         "type": "boolean"
-                    },
-                    "issue_tracker_api_key": {
-                        "maxLength": 255,
-                        "type": "string"
                     },
                     "issue_tracker_base_url": {
                         "maxLength": 255,
@@ -6949,6 +6951,19 @@
                     "observation_log_comment": {
                         "maxLength": 4096,
                         "type": "string"
+                    },
+                    "observation_log_vex_justification": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/VexJustificationEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
+                    },
+                    "observation_log_vex_remediations": {
+                        "nullable": true
                     },
                     "observation_logs": {
                         "items": {
@@ -10732,6 +10747,14 @@
                         "minimum": 0,
                         "type": "integer"
                     },
+                    "date_format": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DateFormatEnum"
+                            }
+                        ],
+                        "description": "Format to display dates and times in the frontend"
+                    },
                     "email_from": {
                         "description": "From address for sending email notifications",
                         "maxLength": 255,
@@ -13924,6 +13947,14 @@
                         "minimum": 0,
                         "type": "integer"
                     },
+                    "date_format": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DateFormatEnum"
+                            }
+                        ],
+                        "description": "Format to display dates and times in the frontend"
+                    },
                     "email_from": {
                         "description": "From address for sending email notifications",
                         "maxLength": 255,
@@ -14247,6 +14278,12 @@
             },
             "StatusSettings": {
                 "properties": {
+                    "background_tasks_time_zone": {
+                        "type": "string"
+                    },
+                    "date_format": {
+                        "type": "string"
+                    },
                     "features": {
                         "items": {
                             "type": "string"
@@ -14263,6 +14300,8 @@
                     }
                 },
                 "required": [
+                    "background_tasks_time_zone",
+                    "date_format",
                     "features",
                     "risk_acceptance_expiry_days",
                     "vex_justification_style"
@@ -14968,6 +15007,7 @@
             "VulnerabilityCheck": {
                 "properties": {
                     "api_configuration_name": {
+                        "default": "",
                         "maxLength": 255,
                         "type": "string"
                     },
@@ -14980,6 +15020,7 @@
                         "type": "string"
                     },
                     "filename": {
+                        "default": "",
                         "maxLength": 255,
                         "type": "string"
                     },
@@ -15054,9 +15095,7 @@
                     }
                 },
                 "required": [
-                    "api_configuration_name",
                     "branch_name",
-                    "filename",
                     "first_import",
                     "id",
                     "last_import",
@@ -15114,7 +15153,7 @@
     "info": {
         "description": "...",
         "title": "SecObserve",
-        "version": "1.60.0"
+        "version": "1.62.0"
     },
     "openapi": "3.0.3",
     "paths": {
@@ -16762,6 +16801,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "name_version",
                         "schema": {
                             "type": "string"
@@ -16834,6 +16880,13 @@
                     {
                         "in": "query",
                         "name": "type",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "version",
                         "schema": {
                             "type": "string"
                         }
@@ -16936,6 +16989,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "name_version",
                         "schema": {
                             "type": "string"
@@ -17011,6 +17071,13 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "version",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -17023,6 +17090,54 @@
                             }
                         },
                         "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "components"
+                ]
+            }
+        },
+        "/api/components/export_csv/": {
+            "get": {
+                "operationId": "components_export_csv_retrieve",
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                },
+                "security": [
+                    {
+                        "API token authentication": []
+                    },
+                    {
+                        "JWT authentication": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "tags": [
+                    "components"
+                ]
+            }
+        },
+        "/api/components/export_excel/": {
+            "get": {
+                "operationId": "components_export_excel_retrieve",
+                "responses": {
+                    "200": {
+                        "description": "No response body"
                     }
                 },
                 "security": [
@@ -18376,6 +18491,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "component_name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "component_name_version",
                         "schema": {
                             "type": "string"
@@ -18407,6 +18529,13 @@
                                 "Operating system",
                                 "Platform"
                             ],
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "component_version",
+                        "schema": {
                             "type": "string"
                         }
                     },
@@ -18475,6 +18604,7 @@
                             "items": {
                                 "enum": [
                                     "-branch_name",
+                                    "-component_name_version",
                                     "-component_name_version_type",
                                     "-component_purl_type",
                                     "-component_type",
@@ -18489,6 +18619,7 @@
                                     "-product_group_name",
                                     "-product_name",
                                     "branch_name",
+                                    "component_name_version",
                                     "component_name_version_type",
                                     "component_purl_type",
                                     "component_type",
@@ -18673,6 +18804,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "component_name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "component_name_version",
                         "schema": {
                             "type": "string"
@@ -18704,6 +18842,13 @@
                                 "Operating system",
                                 "Platform"
                             ],
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "component_version",
+                        "schema": {
                             "type": "string"
                         }
                     },
@@ -18772,6 +18917,7 @@
                             "items": {
                                 "enum": [
                                     "-branch_name",
+                                    "-component_name_version",
                                     "-component_name_version_type",
                                     "-component_purl_type",
                                     "-component_type",
@@ -18786,6 +18932,7 @@
                                     "-product_group_name",
                                     "-product_name",
                                     "branch_name",
+                                    "component_name_version",
                                     "component_name_version_type",
                                     "component_purl_type",
                                     "component_type",
@@ -22625,6 +22772,22 @@
                     },
                     {
                         "in": "query",
+                        "name": "created_after",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_before",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "observation",
                         "schema": {
                             "type": "integer"
@@ -22712,6 +22875,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "origin_component_purl_type",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "origin_docker_image_name_tag_short",
                         "schema": {
                             "type": "string"
@@ -22782,6 +22952,13 @@
                         "name": "product_group",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "scanner",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {
@@ -23077,6 +23254,22 @@
                     },
                     {
                         "in": "query",
+                        "name": "created_after",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_before",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "current_priority",
                         "schema": {
                             "type": "integer"
@@ -23134,6 +23327,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "default_branch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "fix_available",
                         "schema": {
                             "type": "boolean"
@@ -23144,6 +23344,22 @@
                         "name": "has_potential_duplicates",
                         "schema": {
                             "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "last_observation_log_after",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "last_observation_log_before",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
                         }
                     },
                     {
@@ -23487,6 +23703,22 @@
                     },
                     {
                         "in": "query",
+                        "name": "created_after",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "created_before",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "current_priority",
                         "schema": {
                             "type": "integer"
@@ -23544,6 +23776,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "default_branch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "fix_available",
                         "schema": {
                             "type": "boolean"
@@ -23554,6 +23793,22 @@
                         "name": "has_potential_duplicates",
                         "schema": {
                             "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "last_observation_log_after",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "last_observation_log_before",
+                        "schema": {
+                            "format": "date-time",
+                            "type": "string"
                         }
                     },
                     {
@@ -29067,6 +29322,13 @@
                 "parameters": [
                     {
                         "in": "query",
+                        "name": "branches__branch__name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "document_id_prefix",
                         "schema": {
                             "type": "string"
@@ -29594,6 +29856,13 @@
                     },
                     {
                         "in": "query",
+                        "name": "branches__branch__name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
                         "name": "document_id_prefix",
                         "schema": {
                             "type": "string"
@@ -30091,6 +30360,13 @@
                     {
                         "in": "query",
                         "name": "author",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "branches__branch__name",
                         "schema": {
                             "type": "string"
                         }
