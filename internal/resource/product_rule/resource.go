@@ -135,6 +135,8 @@ func (r *productRuleResource) Read(ctx context.Context, req resource.ReadRequest
 	rule, err := r.client.ProductRule(ctx, state.ID.ValueInt64())
 	if err != nil {
 		if client.NotFound(err) {
+			// Framework requires identity even on removal; state from 1.11 or v0.2.0 has none.
+			resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
