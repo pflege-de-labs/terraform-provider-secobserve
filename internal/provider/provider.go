@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/function"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -64,6 +65,8 @@ func New(version string) func() provider.Provider {
 		return &secObserveProvider{version: version}
 	}
 }
+
+var _ provider.ProviderWithListResources = (*secObserveProvider)(nil)
 
 type secObserveProvider struct {
 	version string
@@ -187,6 +190,7 @@ func (p *secObserveProvider) Configure(ctx context.Context, req provider.Configu
 	resp.DataSourceData = apiClient
 	resp.ResourceData = apiClient
 	resp.EphemeralResourceData = apiClient
+	resp.ListResourceData = apiClient
 }
 
 // verifyInstance fails fast on an unusable token and warns about conditions
@@ -281,6 +285,13 @@ func (p *secObserveProvider) DataSources(_ context.Context) []func() datasource.
 		licensegroupdatasource.New,
 		licensepolicydatasource.New,
 		vexcounterdatasource.New,
+	}
+}
+
+// ListResources backs `terraform query`; see docs/design/list-resources.md.
+func (p *secObserveProvider) ListResources(_ context.Context) []func() list.ListResource {
+	return []func() list.ListResource{
+		productresource.NewList,
 	}
 }
 

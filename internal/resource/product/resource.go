@@ -18,6 +18,7 @@ var (
 	_ resource.ResourceWithValidateConfig = (*productResource)(nil)
 	_ resource.ResourceWithUpgradeState   = (*productResource)(nil)
 	_ resource.ResourceWithModifyPlan     = (*productResource)(nil)
+	_ resource.ResourceWithIdentity       = (*productResource)(nil)
 )
 
 // New returns the secobserve_product resource.
@@ -31,6 +32,12 @@ type productResource struct {
 
 func (r *productResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_product"
+}
+
+func (r *productResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *productResource) Configure(
@@ -65,6 +72,7 @@ func (r *productResource) Create(ctx context.Context, req resource.CreateRequest
 	state.SecurityGate.Block = plan.SecurityGate.Block
 	state.BranchHousekeeping.Block = plan.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *productResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -90,6 +98,7 @@ func (r *productResource) Read(ctx context.Context, req resource.ReadRequest, re
 	refreshed.SecurityGate.Block = state.SecurityGate.Block
 	refreshed.BranchHousekeeping.Block = state.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *productResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -122,6 +131,7 @@ func (r *productResource) Update(ctx context.Context, req resource.UpdateRequest
 	refreshed.SecurityGate.Block = plan.SecurityGate.Block
 	refreshed.BranchHousekeeping.Block = plan.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *productResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -153,6 +163,9 @@ func (r *productResource) Delete(ctx context.Context, req resource.DeleteRequest
 func (r *productResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	if id, err := strconv.ParseInt(req.ID, 10, 64); err == nil {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 		return
