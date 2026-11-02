@@ -22,7 +22,7 @@ func (r *licensePolicyResource) ListResourceConfigSchema(
 	_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse,
 ) {
 	resp.Schema = listschema.Schema{
-		MarkdownDescription: "Lists every SecObserve license policy.",
+		MarkdownDescription: tfutil.ListDescription("Lists every SecObserve license policy."),
 	}
 }
 
@@ -35,7 +35,13 @@ func (r *licensePolicyResource) List(ctx context.Context, req list.ListRequest, 
 
 	tfutil.StreamList(ctx, req, stream, items, func(ctx context.Context, item client.LicensePolicy, diags *diag.Diagnostics) any {
 		var m model
-		m.fromAPI(ctx, item, diags)
+		// The list serializer omits fields the detail one has; generated config would clear them.
+		detail, err := r.client.LicensePolicy(ctx, item.ID)
+		if err != nil {
+			diags.AddError("Could not read SecObserve license policy", err.Error())
+			return m
+		}
+		m.fromAPI(ctx, detail, diags)
 		return m
 	})
 }

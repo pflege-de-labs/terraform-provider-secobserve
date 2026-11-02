@@ -24,24 +24,35 @@ var (
 	skipBelowIdentity = []tfversion.TerraformVersionCheck{tfversion.SkipBelow(tfversion.Version1_12_0)}
 )
 
-// listQuery is a .tfquery.hcl body listing every instance of a resource type.
+// listQuery is a .tfquery.hcl body listing every instance of a resource type,
+// with full resource objects so the conversion generated config uses runs too.
 func listQuery(resourceType, name string) string {
 	return fmt.Sprintf(`
 provider "secobserve" {}
 
 list %q %q {
-  provider = secobserve
+  provider         = secobserve
+  include_resource = true
 }`, resourceType, name)
 }
 
-// expectListed asserts that a list block returned an object with this display name.
-func expectListed(listAddress, displayName string) []querycheck.QueryResultCheck {
-	return []querycheck.QueryResultCheck{
+// expectListed asserts that a list block returned an object with this display
+// name and, if given, these attribute values in its resource object.
+func expectListed(listAddress, displayName string, values ...querycheck.KnownValueCheck) []querycheck.QueryResultCheck {
+	byName := queryfilter.ByDisplayName(knownvalue.StringExact(displayName))
+	checks := []querycheck.QueryResultCheck{
 		querycheck.ExpectLengthAtLeast(listAddress, 1),
-		querycheck.ExpectResourceDisplayName(listAddress,
-			queryfilter.ByDisplayName(knownvalue.StringExact(displayName)),
-			knownvalue.StringExact(displayName)),
+		querycheck.ExpectResourceDisplayName(listAddress, byName, knownvalue.StringExact(displayName)),
 	}
+	if len(values) > 0 {
+		checks = append(checks, querycheck.ExpectResourceKnownValues(listAddress, byName, values))
+	}
+	return checks
+}
+
+// setOfSize checks a set attribute's length in a listed resource object.
+func setOfSize(attribute string, size int) querycheck.KnownValueCheck {
+	return querycheck.KnownValueCheck{Path: tfjsonpath.New(attribute), KnownValue: knownvalue.SetSizeExact(size)}
 }
 
 func expectIdentity(address string) []statecheck.StateCheck {
@@ -52,7 +63,7 @@ func expectIdentity(address string) []statecheck.StateCheck {
 
 // testAccList creates one object from config (whose resource is named
 // "test"), lists it with terraform query, then re-imports it by identity.
-func testAccList(t *testing.T, resourceType, config, displayName string) {
+func testAccList(t *testing.T, resourceType, config, displayName string, values ...querycheck.KnownValueCheck) {
 	t.Helper()
 	address := resourceType + ".test"
 
@@ -68,7 +79,7 @@ func testAccList(t *testing.T, resourceType, config, displayName string) {
 			{
 				Query:             true,
 				Config:            listQuery(resourceType, "all"),
-				QueryResultChecks: expectListed(resourceType+".all", displayName),
+				QueryResultChecks: expectListed(resourceType+".all", displayName, values...),
 			},
 			{
 				ResourceName: address,
@@ -80,16 +91,28 @@ func testAccList(t *testing.T, resourceType, config, displayName string) {
 	})
 }
 
+// Approvers are missing from SecObserve's list serializer, so listing must
+// read each product's detail or generated config would clear them.
 func TestAccProductList(t *testing.T) {
 	name := acceptanceName("product")
-	testAccList(t, "secobserve_product",
-		fmt.Sprintf(`resource "secobserve_product" "test" { name = %q }`, name), name)
+	testAccList(t, "secobserve_product", fmt.Sprintf(`
+resource "secobserve_user" "approver" { username = %q }
+
+resource "secobserve_product" "test" {
+  name                 = %q
+  assessment_approvers = [secobserve_user.approver.id]
+}`, acceptanceName("approver"), name), name, setOfSize("assessment_approvers", 1))
 }
 
 func TestAccProductGroupList(t *testing.T) {
 	name := acceptanceName("group")
-	testAccList(t, "secobserve_product_group",
-		fmt.Sprintf(`resource "secobserve_product_group" "test" { name = %q }`, name), name)
+	testAccList(t, "secobserve_product_group", fmt.Sprintf(`
+resource "secobserve_user" "approver" { username = %q }
+
+resource "secobserve_product_group" "test" {
+  name                 = %q
+  assessment_approvers = [secobserve_user.approver.id]
+}`, acceptanceName("approver"), name), name, setOfSize("assessment_approvers", 1))
 }
 
 // State written by a provider without identity support must refresh cleanly.
@@ -141,10 +164,14 @@ resource "secobserve_general_rule" "test" {
 }`, name), name)
 }
 
+// The list serializer carries the raw ignore_component_types string only.
 func TestAccLicensePolicyList(t *testing.T) {
 	name := acceptanceName("policy")
-	testAccList(t, "secobserve_license_policy",
-		fmt.Sprintf(`resource "secobserve_license_policy" "test" { name = %q }`, name), name)
+	testAccList(t, "secobserve_license_policy", fmt.Sprintf(`
+resource "secobserve_license_policy" "test" {
+  name                       = %q
+  ignore_component_type_list = ["docker", "npm"]
+}`, name), name, setOfSize("ignore_component_type_list", 2))
 }
 
 // License groups need one extra request per group for their licenses, so this
@@ -246,7 +273,8 @@ func testAccProductScopedList(t *testing.T, resourceType, config, displayName st
 provider "secobserve" {}
 
 list %q "all" {
-  provider = secobserve
+  provider         = secobserve
+  include_resource = true
   config {
     product = %d
   }

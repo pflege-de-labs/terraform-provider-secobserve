@@ -22,10 +22,10 @@ func (r *productResource) ListResourceConfigSchema(
 	_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse,
 ) {
 	resp.Schema = listschema.Schema{
-		MarkdownDescription: "Lists every SecObserve product (product groups excluded). " +
+		MarkdownDescription: tfutil.ListDescription("Lists every SecObserve product (product groups excluded). " +
 			"Generated configuration never contains `security_gate` or `repository_branch_housekeeping`: " +
 			"add them before the first apply, or an update resets them to inherit. " +
-			"Sensitive values such as `issue_tracker_api_key` are generated as null and must be filled in.",
+			"Sensitive values such as `issue_tracker_api_key` are generated as null and must be filled in."),
 	}
 }
 
@@ -38,7 +38,13 @@ func (r *productResource) List(ctx context.Context, req list.ListRequest, stream
 
 	tfutil.StreamList(ctx, req, stream, products, func(ctx context.Context, product client.Product, diags *diag.Diagnostics) any {
 		var m model
-		m.fromAPI(ctx, product, diags)
+		// The list serializer omits fields the detail one has; generated config would clear them.
+		detail, err := r.client.Product(ctx, product.ID)
+		if err != nil {
+			diags.AddError("Could not read SecObserve product", err.Error())
+			return m
+		}
+		m.fromAPI(ctx, detail, diags)
 		return m
 	})
 }

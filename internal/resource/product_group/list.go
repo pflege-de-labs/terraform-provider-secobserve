@@ -22,7 +22,7 @@ func (r *productGroupResource) ListResourceConfigSchema(
 	_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse,
 ) {
 	resp.Schema = listschema.Schema{
-		MarkdownDescription: "Lists every SecObserve product group. Generated configuration never contains `security_gate` or `repository_branch_housekeeping`: add them before the first apply, or an update resets them to inherit.",
+		MarkdownDescription: tfutil.ListDescription("Lists every SecObserve product group. Generated configuration never contains `security_gate` or `repository_branch_housekeeping`: add them before the first apply, or an update resets them to inherit."),
 	}
 }
 
@@ -35,7 +35,13 @@ func (r *productGroupResource) List(ctx context.Context, req list.ListRequest, s
 
 	tfutil.StreamList(ctx, req, stream, items, func(ctx context.Context, item client.Product, diags *diag.Diagnostics) any {
 		var m model
-		m.fromAPI(ctx, item, diags)
+		// The list serializer omits fields the detail one has; generated config would clear them.
+		detail, err := r.client.ProductGroup(ctx, item.ID)
+		if err != nil {
+			diags.AddError("Could not read SecObserve product group", err.Error())
+			return m
+		}
+		m.fromAPI(ctx, detail, diags)
 		return m
 	})
 }
