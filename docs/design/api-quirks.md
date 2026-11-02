@@ -173,6 +173,10 @@ tests in `internal/provider/product_stub_test.go`:
    gaps only matter for out-of-band changes, which are the less common path
    for a Terraform-managed resource.
 
+   The import gap also applies to `terraform query -generate-config-out`:
+   generated product and product group configuration never contains these
+   blocks (see [list-resources.md](list-resources.md)).
+
 4. **The schema-version-0 state upgrader (the one path where these fields
    really were `Optional + Computed`, and so really can contain a value
    nobody configured) fetches the current instance-wide defaults and drops
