@@ -27,6 +27,7 @@ import (
 var (
 	_ resource.ResourceWithConfigure   = (*licensePolicyResource)(nil)
 	_ resource.ResourceWithImportState = (*licensePolicyResource)(nil)
+	_ resource.ResourceWithIdentity    = (*licensePolicyResource)(nil)
 )
 
 // New returns the secobserve_license_policy resource.
@@ -58,6 +59,12 @@ type model struct {
 
 func (r *licensePolicyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_license_policy"
+}
+
+func (r *licensePolicyResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *licensePolicyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -211,6 +218,7 @@ func (r *licensePolicyResource) Create(ctx context.Context, req resource.CreateR
 	var state model
 	state.fromAPI(ctx, created, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *licensePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -223,6 +231,8 @@ func (r *licensePolicyResource) Read(ctx context.Context, req resource.ReadReque
 	policy, err := r.client.LicensePolicy(ctx, state.ID.ValueInt64())
 	if err != nil {
 		if client.NotFound(err) {
+			// Framework requires identity even on removal; state from 1.11 or v0.2.0 has none.
+			resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -233,6 +243,7 @@ func (r *licensePolicyResource) Read(ctx context.Context, req resource.ReadReque
 	var refreshed model
 	refreshed.fromAPI(ctx, policy, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *licensePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -262,6 +273,7 @@ func (r *licensePolicyResource) Update(ctx context.Context, req resource.UpdateR
 	var refreshed model
 	refreshed.fromAPI(ctx, updated, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *licensePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -280,6 +292,9 @@ func (r *licensePolicyResource) Delete(ctx context.Context, req resource.DeleteR
 func (r *licensePolicyResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	if id, err := strconv.ParseInt(req.ID, 10, 64); err == nil {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 		return

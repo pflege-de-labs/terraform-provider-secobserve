@@ -64,3 +64,17 @@ func ListUnpaginated[T any](ctx context.Context, c *Client, path string, query u
 	}
 	return result.Results, nil
 }
+
+// listForProduct lists a collection filtered to one product. The filter
+// answers an unknown product id with a 400 rather than an empty page, so a
+// 400 for a product that does not exist is reported as an empty list.
+func listForProduct[T any](ctx context.Context, c *Client, path string, productID int64) ([]T, error) {
+	items, err := List[T](ctx, c, path, url.Values{"product": {strconv.FormatInt(productID, 10)}})
+	if err == nil || !BadRequest(err) {
+		return items, err
+	}
+	if _, getErr := c.Product(ctx, productID); NotFound(getErr) {
+		return nil, nil
+	}
+	return nil, err
+}

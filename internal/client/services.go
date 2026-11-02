@@ -67,3 +67,8 @@ func (c *Client) ServiceByName(ctx context.Context, productID int64, name string
 	return FindByExactName[Service](ctx, c, "service", servicesPath, name,
 		url.Values{"product": {strconv.FormatInt(productID, 10)}})
 }
+
+// Services lists the services of one product.
+func (c *Client) Services(ctx context.Context, productID int64) ([]Service, error) {
+	return listForProduct[Service](ctx, c, servicesPath, productID)
+}

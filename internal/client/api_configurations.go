@@ -124,3 +124,8 @@ func (c *Client) APIConfigurationByName(ctx context.Context, productID int64, na
 	return FindByExactName[APIConfiguration](ctx, c, "API configuration", apiConfigurationsPath, name,
 		url.Values{"product": {strconv.FormatInt(productID, 10)}})
 }
+
+// APIConfigurations lists the API configurations of one product.
+func (c *Client) APIConfigurations(ctx context.Context, productID int64) ([]APIConfiguration, error) {
+	return listForProduct[APIConfiguration](ctx, c, apiConfigurationsPath, productID)
+}

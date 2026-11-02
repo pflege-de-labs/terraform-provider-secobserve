@@ -16,6 +16,18 @@ Built against SecObserve **1.59.1**.
 All four phases are implemented. Every resource supports `terraform import`
 and the `import { }` config block.
 
+**List resources** (`terraform query`, Terraform 1.14+), for bulk-importing an
+existing instance with `terraform query -generate-config-out=generated.tf`:
+`secobserve_product_group`, `secobserve_product`, `secobserve_user`,
+`secobserve_authorization_group`, `secobserve_general_rule`,
+`secobserve_license_group`, `secobserve_license_policy`, and per product
+`secobserve_branch`, `secobserve_service`, `secobserve_api_configuration`,
+`secobserve_product_rule`. Generated product and product group configuration
+lacks `security_gate` and `repository_branch_housekeeping`, and sensitive
+values come out as null; add both before the first apply. Terraform stops
+after 100 results per `list` block unless you set `limit`. See
+[docs/design/list-resources.md](docs/design/list-resources.md).
+
 **Resources:**
 
 | Phase | Resources |
@@ -67,7 +79,7 @@ with references to the SecObserve source.
 ## Requirements
 
 - Terraform 1.11 or newer (`secobserve_api_configuration.test_connection` is a
-  write-only attribute).
+  write-only attribute). `terraform query` needs 1.14.
 - Go 1.25 to build from source.
 - A SecObserve **superuser** user API token. SecObserve filters list responses
   for non-superusers and rejects writes to users, general rules, settings and

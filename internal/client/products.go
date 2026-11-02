@@ -149,6 +149,22 @@ func (c *Client) DeleteProduct(ctx context.Context, id int64, name string) error
 	return c.Delete(ctx, fmt.Sprintf("%s%d/", productsPath, id), url.Values{"name": {name}})
 }
 
+// Products lists every product. Groups are dropped client-side so listing
+// never emits an object secobserve_product_group also manages.
+func (c *Client) Products(ctx context.Context) ([]Product, error) {
+	all, err := List[Product](ctx, c, productsPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	products := all[:0]
+	for _, product := range all {
+		if !product.IsProductGroup {
+			products = append(products, product)
+		}
+	}
+	return products, nil
+}
+
 // ProductByName resolves a product by its globally unique name.
 func (c *Client) ProductByName(ctx context.Context, name string) (Product, error) {
 	return FindByExactName[Product](ctx, c, "product", productsPath, name, nil)
@@ -180,6 +196,11 @@ func (c *Client) UpdateProductGroup(ctx context.Context, id int64, request Produ
 // name as confirmation, and it cascades to every product in the group.
 func (c *Client) DeleteProductGroup(ctx context.Context, id int64, name string) error {
 	return c.Delete(ctx, fmt.Sprintf("%s%d/", productGroupsPath, id), url.Values{"name": {name}})
+}
+
+// ProductGroups lists every product group.
+func (c *Client) ProductGroups(ctx context.Context) ([]Product, error) {
+	return List[Product](ctx, c, productGroupsPath, nil)
 }
 
 // ProductGroupByName resolves a product group by name. Products and product

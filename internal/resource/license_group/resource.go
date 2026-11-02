@@ -26,6 +26,7 @@ import (
 var (
 	_ resource.ResourceWithConfigure   = (*licenseGroupResource)(nil)
 	_ resource.ResourceWithImportState = (*licenseGroupResource)(nil)
+	_ resource.ResourceWithIdentity    = (*licenseGroupResource)(nil)
 )
 
 // New returns the secobserve_license_group resource.
@@ -53,6 +54,12 @@ type model struct {
 
 func (r *licenseGroupResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_license_group"
+}
+
+func (r *licenseGroupResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *licenseGroupResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -185,6 +192,7 @@ func (r *licenseGroupResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	r.readInto(ctx, created.ID, &resp.State, &resp.Diagnostics)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, types.Int64Value(created.ID))...)
 }
 
 func (r *licenseGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -197,6 +205,8 @@ func (r *licenseGroupResource) Read(ctx context.Context, req resource.ReadReques
 	group, err := r.client.LicenseGroup(ctx, state.ID.ValueInt64())
 	if err != nil {
 		if client.NotFound(err) {
+			// Framework requires identity even on removal; state from 1.11 or v0.2.0 has none.
+			resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -213,6 +223,7 @@ func (r *licenseGroupResource) Read(ctx context.Context, req resource.ReadReques
 	var refreshed model
 	refreshed.fromAPI(ctx, group, licenses, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 // readInto re-reads a license group plus its licenses and writes both into
@@ -282,6 +293,7 @@ func (r *licenseGroupResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	r.readInto(ctx, id, &resp.State, &resp.Diagnostics)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, types.Int64Value(id))...)
 }
 
 func (r *licenseGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -300,6 +312,9 @@ func (r *licenseGroupResource) Delete(ctx context.Context, req resource.DeleteRe
 func (r *licenseGroupResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	if id, err := strconv.ParseInt(req.ID, 10, 64); err == nil {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 		return

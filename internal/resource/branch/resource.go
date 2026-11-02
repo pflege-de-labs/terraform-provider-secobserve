@@ -28,6 +28,7 @@ var (
 	_ resource.ResourceWithConfigure      = (*branchResource)(nil)
 	_ resource.ResourceWithImportState    = (*branchResource)(nil)
 	_ resource.ResourceWithValidateConfig = (*branchResource)(nil)
+	_ resource.ResourceWithIdentity       = (*branchResource)(nil)
 )
 
 // New returns the secobserve_branch resource.
@@ -57,6 +58,12 @@ type model struct {
 
 func (r *branchResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_branch"
+}
+
+func (r *branchResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *branchResource) Configure(
@@ -221,6 +228,7 @@ func (r *branchResource) Create(ctx context.Context, req resource.CreateRequest,
 	var state model
 	state.fromAPI(created)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *branchResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -233,6 +241,8 @@ func (r *branchResource) Read(ctx context.Context, req resource.ReadRequest, res
 	branch, err := r.client.Branch(ctx, state.ID.ValueInt64())
 	if err != nil {
 		if client.NotFound(err) {
+			// Framework requires identity even on removal; state from 1.11 or v0.2.0 has none.
+			resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -243,6 +253,7 @@ func (r *branchResource) Read(ctx context.Context, req resource.ReadRequest, res
 	var refreshed model
 	refreshed.fromAPI(branch)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *branchResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -267,6 +278,7 @@ func (r *branchResource) Update(ctx context.Context, req resource.UpdateRequest,
 	var refreshed model
 	refreshed.fromAPI(updated)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *branchResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -315,6 +327,9 @@ func (r *branchResource) explainDeleteFailure(err error, state model, diags *dia
 func (r *branchResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	productID, name, found := strings.Cut(req.ID, "/")
 	if !found {
 		resp.Diagnostics.AddError(

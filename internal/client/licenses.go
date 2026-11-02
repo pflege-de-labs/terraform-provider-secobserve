@@ -108,6 +108,11 @@ func (c *Client) DeleteLicenseGroup(ctx context.Context, id int64) error {
 	return c.Delete(ctx, fmt.Sprintf("%s%d/", licenseGroupsPath, id), nil)
 }
 
+// LicenseGroups lists every license group, without their licenses.
+func (c *Client) LicenseGroups(ctx context.Context) ([]LicenseGroup, error) {
+	return List[LicenseGroup](ctx, c, licenseGroupsPath, nil)
+}
+
 // LicenseGroupByName resolves a license group by its exact, unique name.
 func (c *Client) LicenseGroupByName(ctx context.Context, name string) (LicenseGroup, error) {
 	return FindByExactName[LicenseGroup](ctx, c, "license group", licenseGroupsPath, name, nil)
@@ -140,8 +145,15 @@ func (c *Client) RemoveLicenseFromGroup(ctx context.Context, groupID, licenseID 
 // The license_groups serializer never exposes its licenses M2M, so this is
 // the only way to read current membership back: License's own list filter
 // supports an exact license_groups=<id> match (licenses/api/filters.py:187).
+//
+// The explicit ordering is load-bearing: the default order is not stable
+// across pages, so groups over one page (the ScanCode ones) came back with
+// overlapping pages and missing licenses.
 func (c *Client) ListLicensesInGroup(ctx context.Context, groupID int64) ([]License, error) {
-	return List[License](ctx, c, licensesPath, url.Values{"license_groups": {strconv.FormatInt(groupID, 10)}})
+	return List[License](ctx, c, licensesPath, url.Values{
+		"license_groups": {strconv.FormatInt(groupID, 10)},
+		"ordering":       {"spdx_id"},
+	})
 }
 
 // LicenseGroupMemberRequest grants a user manage rights on a license group.

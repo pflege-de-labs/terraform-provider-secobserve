@@ -44,6 +44,11 @@ treat `version_unknown` as "unknown", never as a mismatch.
   override (`backend/config/settings/base.py:389-390`). `/api/product_api_tokens/`
   is a plain `ViewSet` and returns a bare `{"results": [...]}` with no
   pagination envelope (`core/api/views_product.py:603-604`).
+- `/api/licenses/?license_groups=<id>` has no stable default order: walking
+  the 429 licenses of "Permissive (ScanCode LicenseDB)" in pages of 100
+  returned 79 duplicates and dropped as many (found by the acceptance suite
+  against 1.60.0). `ListLicensesInGroup` sends `ordering=spdx_id`; an unknown
+  `ordering` value is a 400, not ignored.
 - Authenticated callers are throttled at 100 requests per second
   (`config/settings/base.py:392-396`).
 - Every relation is a DRF `PrimaryKeyRelatedField`: writes accept **numeric
@@ -167,6 +172,10 @@ tests in `internal/provider/product_stub_test.go`:
    "provider produced inconsistent result" crash this design fixes, and both
    gaps only matter for out-of-band changes, which are the less common path
    for a Terraform-managed resource.
+
+   The import gap also applies to `terraform query -generate-config-out`:
+   generated product and product group configuration never contains these
+   blocks (see [list-resources.md](list-resources.md)).
 
 4. **The schema-version-0 state upgrader (the one path where these fields
    really were `Optional + Computed`, and so really can contain a value

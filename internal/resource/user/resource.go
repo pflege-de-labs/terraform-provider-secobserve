@@ -24,6 +24,7 @@ import (
 var (
 	_ resource.ResourceWithConfigure   = (*userResource)(nil)
 	_ resource.ResourceWithImportState = (*userResource)(nil)
+	_ resource.ResourceWithIdentity    = (*userResource)(nil)
 )
 
 // New returns the secobserve_user resource.
@@ -50,6 +51,12 @@ type model struct {
 
 func (r *userResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_user"
+}
+
+func (r *userResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *userResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -206,6 +213,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	state.fromAPI(created)
 	warnIfOIDCClaimsSet(state, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -218,6 +226,8 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	user, err := r.client.User(ctx, state.ID.ValueInt64())
 	if err != nil {
 		if client.NotFound(err) {
+			// Framework requires identity even on removal; state from 1.11 or v0.2.0 has none.
+			resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -228,6 +238,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	var refreshed model
 	refreshed.fromAPI(user)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -253,6 +264,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	refreshed.fromAPI(updated)
 	warnIfOIDCClaimsSet(refreshed, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -276,6 +288,9 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 func (r *userResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	if id, err := strconv.ParseInt(req.ID, 10, 64); err == nil {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 		return

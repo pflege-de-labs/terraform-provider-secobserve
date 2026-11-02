@@ -23,6 +23,7 @@ import (
 var (
 	_ resource.ResourceWithConfigure   = (*serviceResource)(nil)
 	_ resource.ResourceWithImportState = (*serviceResource)(nil)
+	_ resource.ResourceWithIdentity    = (*serviceResource)(nil)
 )
 
 // New returns the secobserve_service resource.
@@ -43,6 +44,12 @@ type model struct {
 
 func (r *serviceResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service"
+}
+
+func (r *serviceResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *serviceResource) Configure(
@@ -106,6 +113,7 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 	var state model
 	state.fromAPI(created)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *serviceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -118,6 +126,8 @@ func (r *serviceResource) Read(ctx context.Context, req resource.ReadRequest, re
 	service, err := r.client.Service(ctx, state.ID.ValueInt64())
 	if err != nil {
 		if client.NotFound(err) {
+			// Framework requires identity even on removal; state from 1.11 or v0.2.0 has none.
+			resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -128,6 +138,7 @@ func (r *serviceResource) Read(ctx context.Context, req resource.ReadRequest, re
 	var refreshed model
 	refreshed.fromAPI(service)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *serviceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -155,6 +166,7 @@ func (r *serviceResource) Update(ctx context.Context, req resource.UpdateRequest
 	var refreshed model
 	refreshed.fromAPI(updated)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *serviceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -186,6 +198,9 @@ func (r *serviceResource) Delete(ctx context.Context, req resource.DeleteRequest
 func (r *serviceResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	productID, name, found := strings.Cut(req.ID, "/")
 	if !found {
 		resp.Diagnostics.AddError(
