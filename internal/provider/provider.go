@@ -297,6 +297,7 @@ func (p *secObserveProvider) ListResources(_ context.Context) []func() list.List
 		authorizationgroupresource.NewList,
 		generalruleresource.NewList,
 		licensepolicyresource.NewList,
+		licensegroupresource.NewList,
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck/queryfilter"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -140,4 +141,51 @@ func TestAccLicensePolicyList(t *testing.T) {
 	name := acceptanceName("policy")
 	testAccList(t, "secobserve_license_policy",
 		fmt.Sprintf(`resource "secobserve_license_policy" "test" { name = %q }`, name), name)
+}
+
+// License groups need one extra request per group for their licenses, so this
+// also checks that full resource objects carry them.
+func TestAccLicenseGroupList(t *testing.T) {
+	name := acceptanceName("license-group")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		TerraformVersionChecks:   skipBelowQuery,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+data "secobserve_license" "mit" { spdx_id = "MIT" }
+data "secobserve_license" "apache" { spdx_id = "Apache-2.0" }
+
+resource "secobserve_license_group" "test" {
+  name     = %q
+  licenses = [data.secobserve_license.mit.id, data.secobserve_license.apache.id]
+}`, name),
+				ConfigStateChecks: expectIdentity("secobserve_license_group.test"),
+			},
+			{
+				Query: true,
+				Config: `
+provider "secobserve" {}
+
+list "secobserve_license_group" "all" {
+  provider         = secobserve
+  include_resource = true
+}`,
+				QueryResultChecks: append(expectListed("secobserve_license_group.all", name),
+					querycheck.ExpectResourceKnownValues("secobserve_license_group.all",
+						queryfilter.ByDisplayName(knownvalue.StringExact(name)),
+						[]querycheck.KnownValueCheck{{
+							Path:       tfjsonpath.New("licenses"),
+							KnownValue: knownvalue.SetSizeExact(2),
+						}})),
+			},
+			{
+				ResourceName:    "secobserve_license_group.test",
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			},
+		},
+	})
 }
