@@ -3,12 +3,12 @@
 page_title: "secobserve_product List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists every SecObserve product (product groups excluded). Generated configuration never contains security_gate or repository_branch_housekeeping: add them before the first apply, or an update resets them to inherit. Sensitive values such as issue_tracker_api_key are generated as null and must be filled in.
+  Lists every SecObserve product (product groups excluded). Generated configuration never contains security_gate or repository_branch_housekeeping: add them before the first apply, or an update resets them to inherit. Sensitive values such as issue_tracker_api_key are generated as null and must be filled in. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_product (List Resource)
 
-Lists every SecObserve product (product groups excluded). Generated configuration never contains `security_gate` or `repository_branch_housekeeping`: add them before the first apply, or an update resets them to inherit. Sensitive values such as `issue_tracker_api_key` are generated as null and must be filled in.
+Lists every SecObserve product (product groups excluded). Generated configuration never contains `security_gate` or `repository_branch_housekeeping`: add them before the first apply, or an update resets them to inherit. Sensitive values such as `issue_tracker_api_key` are generated as null and must be filled in. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

@@ -22,9 +22,9 @@ func (r *licenseGroupResource) ListResourceConfigSchema(
 	_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse,
 ) {
 	resp.Schema = listschema.Schema{
-		MarkdownDescription: "Lists every SecObserve license group, including the ScanCode LicenseDB groups " +
+		MarkdownDescription: tfutil.ListDescription("Lists every SecObserve license group, including the ScanCode LicenseDB groups " +
 			"SecObserve maintains itself. With `include_resource = true` each group costs one extra request " +
-			"for its licenses.",
+			"for its licenses."),
 	}
 }
 

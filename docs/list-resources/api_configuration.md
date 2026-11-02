@@ -3,12 +3,12 @@
 page_title: "secobserve_api_configuration List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists the API configurations of one SecObserve product. api_key and basic_auth_password are sensitive, so generated configuration has them as null: fill them in before the first apply.
+  Lists the API configurations of one SecObserve product. api_key and basic_auth_password are sensitive, so generated configuration has them as null: fill them in before the first apply. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_api_configuration (List Resource)
 
-Lists the API configurations of one SecObserve product. `api_key` and `basic_auth_password` are sensitive, so generated configuration has them as null: fill them in before the first apply.
+Lists the API configurations of one SecObserve product. `api_key` and `basic_auth_password` are sensitive, so generated configuration has them as null: fill them in before the first apply. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

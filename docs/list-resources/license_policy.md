@@ -3,12 +3,12 @@
 page_title: "secobserve_license_policy List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists every SecObserve license policy.
+  Lists every SecObserve license policy. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_license_policy (List Resource)
 
-Lists every SecObserve license policy.
+Lists every SecObserve license policy. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

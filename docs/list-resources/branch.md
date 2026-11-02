@@ -3,12 +3,12 @@
 page_title: "secobserve_branch List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists the branches of one SecObserve product.
+  Lists the branches of one SecObserve product. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_branch (List Resource)
 
-Lists the branches of one SecObserve product.
+Lists the branches of one SecObserve product. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

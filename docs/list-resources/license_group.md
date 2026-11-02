@@ -3,12 +3,12 @@
 page_title: "secobserve_license_group List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists every SecObserve license group, including the ScanCode LicenseDB groups SecObserve maintains itself. With include_resource = true each group costs one extra request for its licenses.
+  Lists every SecObserve license group, including the ScanCode LicenseDB groups SecObserve maintains itself. With include_resource = true each group costs one extra request for its licenses. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_license_group (List Resource)
 
-Lists every SecObserve license group, including the ScanCode LicenseDB groups SecObserve maintains itself. With `include_resource = true` each group costs one extra request for its licenses.
+Lists every SecObserve license group, including the ScanCode LicenseDB groups SecObserve maintains itself. With `include_resource = true` each group costs one extra request for its licenses. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

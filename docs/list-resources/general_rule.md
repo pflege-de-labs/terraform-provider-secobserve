@@ -3,12 +3,12 @@
 page_title: "secobserve_general_rule List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists every SecObserve general rule. General rule names are not unique, so display names may repeat; the identity id is what import uses.
+  Lists every SecObserve general rule. General rule names are not unique, so display names may repeat; the identity id is what import uses. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_general_rule (List Resource)
 
-Lists every SecObserve general rule. General rule names are not unique, so display names may repeat; the identity id is what import uses.
+Lists every SecObserve general rule. General rule names are not unique, so display names may repeat; the identity id is what import uses. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

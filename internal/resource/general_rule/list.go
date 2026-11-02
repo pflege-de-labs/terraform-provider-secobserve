@@ -22,7 +22,7 @@ func (r *generalRuleResource) ListResourceConfigSchema(
 	_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse,
 ) {
 	resp.Schema = listschema.Schema{
-		MarkdownDescription: "Lists every SecObserve general rule. General rule names are not unique, so display names may repeat; the identity id is what import uses.",
+		MarkdownDescription: tfutil.ListDescription("Lists every SecObserve general rule. General rule names are not unique, so display names may repeat; the identity id is what import uses."),
 	}
 }
 

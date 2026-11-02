@@ -3,12 +3,12 @@
 page_title: "secobserve_product_rule List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists the rules of one SecObserve product.
+  Lists the rules of one SecObserve product. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_product_rule (List Resource)
 
-Lists the rules of one SecObserve product.
+Lists the rules of one SecObserve product. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

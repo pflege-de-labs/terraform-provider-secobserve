@@ -22,7 +22,7 @@ func (r *userResource) ListResourceConfigSchema(
 	_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse,
 ) {
 	resp.Schema = listschema.Schema{
-		MarkdownDescription: "Lists every SecObserve user.",
+		MarkdownDescription: tfutil.ListDescription("Lists every SecObserve user."),
 	}
 }
 

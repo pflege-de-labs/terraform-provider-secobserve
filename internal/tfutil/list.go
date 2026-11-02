@@ -59,10 +59,16 @@ type ProductFilter struct {
 	Product types.Int64 `tfsdk:"product"`
 }
 
+// ListDescription appends the note on Terraform's result cap to a list
+// resource description.
+func ListDescription(description string) string {
+	return description + " Terraform stops after 100 results unless the `list` block sets `limit`."
+}
+
 // ProductFilterSchema is the list config schema matching ProductFilter.
 func ProductFilterSchema(description string) listschema.Schema {
 	return listschema.Schema{
-		MarkdownDescription: description,
+		MarkdownDescription: ListDescription(description),
 		Attributes: map[string]listschema.Attribute{
 			"product": listschema.Int64Attribute{
 				Required:            true,

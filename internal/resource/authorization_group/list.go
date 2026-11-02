@@ -22,7 +22,7 @@ func (r *authorizationGroupResource) ListResourceConfigSchema(
 	_ context.Context, _ list.ListResourceSchemaRequest, resp *list.ListResourceSchemaResponse,
 ) {
 	resp.Schema = listschema.Schema{
-		MarkdownDescription: "Lists every SecObserve authorization group.",
+		MarkdownDescription: tfutil.ListDescription("Lists every SecObserve authorization group."),
 	}
 }
 

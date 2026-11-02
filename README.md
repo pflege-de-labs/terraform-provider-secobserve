@@ -24,7 +24,8 @@ existing instance with `terraform query -generate-config-out=generated.tf`:
 `secobserve_branch`, `secobserve_service`, `secobserve_api_configuration`,
 `secobserve_product_rule`. Generated product and product group configuration
 lacks `security_gate` and `repository_branch_housekeeping`, and sensitive
-values come out as null; add both before the first apply. See
+values come out as null; add both before the first apply. Terraform stops
+after 100 results per `list` block unless you set `limit`. See
 [docs/design/list-resources.md](docs/design/list-resources.md).
 
 **Resources:**

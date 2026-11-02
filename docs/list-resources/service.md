@@ -3,12 +3,12 @@
 page_title: "secobserve_service List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists the services of one SecObserve product.
+  Lists the services of one SecObserve product. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_service (List Resource)
 
-Lists the services of one SecObserve product.
+Lists the services of one SecObserve product. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

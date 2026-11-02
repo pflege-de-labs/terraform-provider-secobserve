@@ -3,12 +3,12 @@
 page_title: "secobserve_authorization_group List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists every SecObserve authorization group.
+  Lists every SecObserve authorization group. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_authorization_group (List Resource)
 
-Lists every SecObserve authorization group.
+Lists every SecObserve authorization group. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 

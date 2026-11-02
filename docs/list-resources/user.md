@@ -3,12 +3,12 @@
 page_title: "secobserve_user List Resource - secobserve"
 subcategory: ""
 description: |-
-  Lists every SecObserve user.
+  Lists every SecObserve user. Terraform stops after 100 results unless the list block sets limit.
 ---
 
 # secobserve_user (List Resource)
 
-Lists every SecObserve user.
+Lists every SecObserve user. Terraform stops after 100 results unless the `list` block sets `limit`.
 
 ## Example Usage
 
