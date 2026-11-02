@@ -25,6 +25,7 @@ var (
 	_ resource.ResourceWithConfigure      = (*productRuleResource)(nil)
 	_ resource.ResourceWithImportState    = (*productRuleResource)(nil)
 	_ resource.ResourceWithValidateConfig = (*productRuleResource)(nil)
+	_ resource.ResourceWithIdentity       = (*productRuleResource)(nil)
 )
 
 // New returns the secobserve_product_rule resource.
@@ -46,6 +47,12 @@ type model struct {
 
 func (r *productRuleResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_product_rule"
+}
+
+func (r *productRuleResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *productRuleResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -115,6 +122,7 @@ func (r *productRuleResource) Create(ctx context.Context, req resource.CreateReq
 	var state model
 	state.fromAPI(ctx, created, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *productRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -137,6 +145,7 @@ func (r *productRuleResource) Read(ctx context.Context, req resource.ReadRequest
 	var refreshed model
 	refreshed.fromAPI(ctx, rule, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *productRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -162,6 +171,7 @@ func (r *productRuleResource) Update(ctx context.Context, req resource.UpdateReq
 	var refreshed model
 	refreshed.fromAPI(ctx, updated, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *productRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -181,6 +191,9 @@ func (r *productRuleResource) Delete(ctx context.Context, req resource.DeleteReq
 func (r *productRuleResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	productID, name, found := strings.Cut(req.ID, "/")
 	if !found {
 		resp.Diagnostics.AddError(

@@ -74,6 +74,12 @@ func Conflict(err error) bool {
 	return errors.As(err, &apiErr) && apiErr.Status == http.StatusConflict
 }
 
+// BadRequest reports whether err is a 400, a validation failure.
+func BadRequest(err error) bool {
+	var apiErr *APIError
+	return errors.As(err, &apiErr) && apiErr.Status == http.StatusBadRequest
+}
+
 // Forbidden reports whether err is a 403, usually a missing permission on the
 // provider's token rather than a bad configuration.
 func Forbidden(err error) bool {

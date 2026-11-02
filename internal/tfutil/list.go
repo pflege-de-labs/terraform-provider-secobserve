@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
@@ -51,4 +52,22 @@ func ListError(summary string, err error) iter.Seq[list.ListResult] {
 	var diags diag.Diagnostics
 	diags.AddError(summary, err.Error())
 	return list.ListResultsStreamDiagnostics(diags)
+}
+
+// ProductFilter is the list config of resources listed per product.
+type ProductFilter struct {
+	Product types.Int64 `tfsdk:"product"`
+}
+
+// ProductFilterSchema is the list config schema matching ProductFilter.
+func ProductFilterSchema(description string) listschema.Schema {
+	return listschema.Schema{
+		MarkdownDescription: description,
+		Attributes: map[string]listschema.Attribute{
+			"product": listschema.Int64Attribute{
+				Required:            true,
+				MarkdownDescription: "Id of the product whose objects to list.",
+			},
+		},
+	}
 }

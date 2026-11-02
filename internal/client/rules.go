@@ -175,3 +175,8 @@ type productRuleRequest struct {
 func (c *Client) GeneralRules(ctx context.Context) ([]Rule, error) {
 	return List[Rule](ctx, c, generalRulesPath, nil)
 }
+
+// ProductRules lists the rules of one product.
+func (c *Client) ProductRules(ctx context.Context, productID int64) ([]Rule, error) {
+	return listForProduct[Rule](ctx, c, productRulesPath, productID)
+}

@@ -107,3 +107,42 @@ func TestListUnpaginated(t *testing.T) {
 func server(r *http.Request) string {
 	return "http://" + r.Host + r.URL.Path
 }
+
+func TestListForProductUnknownProductIsEmpty(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/branches/":
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"message":"{'product': [ErrorDetail(string='Select a valid choice.', code='invalid_choice')]}"}`))
+		case "/api/products/42/":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			t.Errorf("unexpected path %q", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	got, err := testClient(t, server.URL).Branches(context.Background(), 42)
+	if err != nil || len(got) != 0 {
+		t.Fatalf("got %+v, %v; want empty list, no error", got, err)
+	}
+}
+
+func TestListForProductOtherBadRequestSurfaces(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/branches/":
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"message":"something else"}`))
+		case "/api/products/42/":
+			_ = json.NewEncoder(w).Encode(Product{ID: 42, Name: "p"})
+		default:
+			t.Errorf("unexpected path %q", r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	if _, err := testClient(t, server.URL).Branches(context.Background(), 42); err == nil {
+		t.Fatal("want the 400 surfaced for an existing product")
+	}
+}

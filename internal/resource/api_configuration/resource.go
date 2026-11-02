@@ -28,6 +28,7 @@ import (
 var (
 	_ resource.ResourceWithConfigure   = (*apiConfigurationResource)(nil)
 	_ resource.ResourceWithImportState = (*apiConfigurationResource)(nil)
+	_ resource.ResourceWithIdentity    = (*apiConfigurationResource)(nil)
 )
 
 // New returns the secobserve_api_configuration resource.
@@ -71,6 +72,12 @@ type model struct {
 
 func (r *apiConfigurationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_api_configuration"
+}
+
+func (r *apiConfigurationResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *apiConfigurationResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -286,6 +293,7 @@ func (r *apiConfigurationResource) Create(ctx context.Context, req resource.Crea
 	var state model
 	state.fromAPI(created)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *apiConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -308,6 +316,7 @@ func (r *apiConfigurationResource) Read(ctx context.Context, req resource.ReadRe
 	var refreshed model
 	refreshed.fromAPI(config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *apiConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -337,6 +346,7 @@ func (r *apiConfigurationResource) Update(ctx context.Context, req resource.Upda
 	var refreshed model
 	refreshed.fromAPI(updated)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *apiConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -356,6 +366,9 @@ func (r *apiConfigurationResource) Delete(ctx context.Context, req resource.Dele
 func (r *apiConfigurationResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	productID, name, found := strings.Cut(req.ID, "/")
 	if !found {
 		resp.Diagnostics.AddError(

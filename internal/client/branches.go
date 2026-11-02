@@ -84,3 +84,8 @@ func (c *Client) BranchByName(ctx context.Context, productID int64, name string)
 	return FindByExactName[Branch](ctx, c, "branch", branchesPath, name,
 		url.Values{"product": {strconv.FormatInt(productID, 10)}})
 }
+
+// Branches lists the branches of one product.
+func (c *Client) Branches(ctx context.Context, productID int64) ([]Branch, error) {
+	return listForProduct[Branch](ctx, c, branchesPath, productID)
+}

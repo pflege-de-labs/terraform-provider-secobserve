@@ -1,7 +1,9 @@
 package provider_test
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -12,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+
+	"github.com/pflege-de-labs/terraform-provider-secobserve/internal/client"
 )
 
 // terraform query needs 1.14; resource identity alone needs 1.12.
@@ -185,6 +189,149 @@ list "secobserve_license_group" "all" {
 				ResourceName:    "secobserve_license_group.test",
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			},
+		},
+	})
+}
+
+// testAccOutOfBandProduct creates a parent product through the API client:
+// a .tfquery.hcl cannot reference resources, so the product-scoped list tests
+// need its id before the test case starts.
+func testAccOutOfBandProduct(t *testing.T) client.Product {
+	t.Helper()
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("acceptance test; set TF_ACC=1")
+	}
+	testAccPreCheck(t)
+
+	apiClient, err := client.New(client.Config{
+		BaseURL:  os.Getenv("SECOBSERVE_BASE_URL"),
+		APIToken: os.Getenv("SECOBSERVE_API_TOKEN"),
+		Insecure: os.Getenv("SECOBSERVE_INSECURE") == "true",
+	})
+	if err != nil {
+		t.Fatalf("client.New: %v", err)
+	}
+	// Name only: ProductRequest always sends every field, several of which reject null.
+	var product client.Product
+	err = apiClient.Post(context.Background(), "api/products/", map[string]string{"name": acceptanceName("parent")}, &product)
+	if err != nil {
+		t.Fatalf("CreateProduct: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := apiClient.DeleteProduct(context.Background(), product.ID, product.Name); err != nil && !client.NotFound(err) {
+			t.Errorf("DeleteProduct: %v", err)
+		}
+	})
+	return product
+}
+
+// testAccProductScopedList is testAccList for resources listed per product.
+func testAccProductScopedList(t *testing.T, resourceType, config, displayName string, productID int64) {
+	t.Helper()
+	address := resourceType + ".test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		TerraformVersionChecks:   skipBelowQuery,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:            config,
+				ConfigStateChecks: expectIdentity(address),
+			},
+			{
+				Query: true,
+				Config: fmt.Sprintf(`
+provider "secobserve" {}
+
+list %q "all" {
+  provider = secobserve
+  config {
+    product = %d
+  }
+}`, resourceType, productID),
+				QueryResultChecks: expectListed(resourceType+".all", displayName),
+			},
+			{
+				ResourceName:    address,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			},
+		},
+	})
+}
+
+func TestAccBranchList(t *testing.T) {
+	product := testAccOutOfBandProduct(t)
+	testAccProductScopedList(t, "secobserve_branch", fmt.Sprintf(`
+resource "secobserve_branch" "test" {
+  product = %d
+  name    = "main"
+}`, product.ID), "main", product.ID)
+}
+
+func TestAccServiceList(t *testing.T) {
+	product := testAccOutOfBandProduct(t)
+	testAccProductScopedList(t, "secobserve_service", fmt.Sprintf(`
+resource "secobserve_service" "test" {
+  product = %d
+  name    = "api"
+}`, product.ID), "api", product.ID)
+}
+
+func TestAccAPIConfigurationList(t *testing.T) {
+	product := testAccOutOfBandProduct(t)
+	name := acceptanceName("apiconf")
+	testAccProductScopedList(t, "secobserve_api_configuration", fmt.Sprintf(`
+data "secobserve_parser" "trivy" {
+  name = "Trivy Operator Prometheus"
+}
+
+resource "secobserve_api_configuration" "test" {
+  product  = %d
+  name     = %q
+  parser   = data.secobserve_parser.trivy.id
+  base_url = "https://trivy.example.com"
+  api_key  = "secret-key"
+}`, product.ID, name), name, product.ID)
+}
+
+func TestAccProductRuleList(t *testing.T) {
+	product := testAccOutOfBandProduct(t)
+	name := acceptanceName("product-rule")
+	testAccProductScopedList(t, "secobserve_product_rule", fmt.Sprintf(`
+resource "secobserve_product_rule" "test" {
+  product     = %d
+  name        = %q
+  description = "resolve false positives from this scanner"
+  new_status  = "False positive"
+}`, product.ID, name), name, product.ID)
+}
+
+// A product id that does not exist lists nothing rather than failing.
+func TestAccBranchListUnknownProduct(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		TerraformVersionChecks:   skipBelowQuery,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// A query step needs a prior config step; the provider block lives in the query file.
+				Config: `locals { unused = true }`,
+			},
+			{
+				Query: true,
+				Config: `
+provider "secobserve" {}
+
+list "secobserve_branch" "none" {
+  provider = secobserve
+  config {
+    product = 999999999
+  }
+}`,
+				QueryResultChecks: []querycheck.QueryResultCheck{querycheck.ExpectLength("secobserve_branch.none", 0)},
 			},
 		},
 	})
