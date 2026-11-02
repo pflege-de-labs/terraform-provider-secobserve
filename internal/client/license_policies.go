@@ -294,3 +294,8 @@ func (c *Client) FindLicensePolicyAuthorizationGroupMember(
 	}
 	return members[0], nil
 }
+
+// LicensePolicies lists every license policy.
+func (c *Client) LicensePolicies(ctx context.Context) ([]LicensePolicy, error) {
+	return List[LicensePolicy](ctx, c, licensePoliciesPath, nil)
+}

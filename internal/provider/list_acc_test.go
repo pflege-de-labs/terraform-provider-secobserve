@@ -112,3 +112,32 @@ func TestAccProductIdentityUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccUserList(t *testing.T) {
+	name := acceptanceName("user")
+	testAccList(t, "secobserve_user",
+		fmt.Sprintf(`resource "secobserve_user" "test" { username = %q }`, name), name)
+}
+
+func TestAccAuthorizationGroupList(t *testing.T) {
+	name := acceptanceName("authz")
+	testAccList(t, "secobserve_authorization_group",
+		fmt.Sprintf(`resource "secobserve_authorization_group" "test" { name = %q }`, name), name)
+}
+
+func TestAccGeneralRuleList(t *testing.T) {
+	name := acceptanceName("rule")
+	testAccList(t, "secobserve_general_rule", fmt.Sprintf(`
+resource "secobserve_general_rule" "test" {
+  name        = %q
+  description = "ignore dev dependencies"
+  title       = "^dev-.*"
+  new_status  = "Resolved"
+}`, name), name)
+}
+
+func TestAccLicensePolicyList(t *testing.T) {
+	name := acceptanceName("policy")
+	testAccList(t, "secobserve_license_policy",
+		fmt.Sprintf(`resource "secobserve_license_policy" "test" { name = %q }`, name), name)
+}

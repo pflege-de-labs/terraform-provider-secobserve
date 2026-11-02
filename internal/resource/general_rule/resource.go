@@ -21,6 +21,7 @@ var (
 	_ resource.ResourceWithConfigure      = (*generalRuleResource)(nil)
 	_ resource.ResourceWithImportState    = (*generalRuleResource)(nil)
 	_ resource.ResourceWithValidateConfig = (*generalRuleResource)(nil)
+	_ resource.ResourceWithIdentity       = (*generalRuleResource)(nil)
 )
 
 // New returns the secobserve_general_rule resource.
@@ -41,6 +42,12 @@ type model struct {
 
 func (r *generalRuleResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_general_rule"
+}
+
+func (r *generalRuleResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *generalRuleResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -109,6 +116,7 @@ func (r *generalRuleResource) Create(ctx context.Context, req resource.CreateReq
 	var state model
 	state.fromAPI(ctx, created, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *generalRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -131,6 +139,7 @@ func (r *generalRuleResource) Read(ctx context.Context, req resource.ReadRequest
 	var refreshed model
 	refreshed.fromAPI(ctx, rule, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *generalRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -155,6 +164,7 @@ func (r *generalRuleResource) Update(ctx context.Context, req resource.UpdateReq
 	var refreshed model
 	refreshed.fromAPI(ctx, updated, &resp.Diagnostics)
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *generalRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -175,6 +185,9 @@ func (r *generalRuleResource) Delete(ctx context.Context, req resource.DeleteReq
 func (r *generalRuleResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	if id, err := strconv.ParseInt(req.ID, 10, 64); err == nil {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 		return

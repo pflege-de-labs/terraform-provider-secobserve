@@ -67,3 +67,8 @@ func (c *Client) DeleteAuthorizationGroup(ctx context.Context, id int64) error {
 func (c *Client) AuthorizationGroupByName(ctx context.Context, name string) (AuthorizationGroup, error) {
 	return FindByExactName[AuthorizationGroup](ctx, c, "authorization group", authorizationGroupsPath, name, nil)
 }
+
+// AuthorizationGroups lists every authorization group.
+func (c *Client) AuthorizationGroups(ctx context.Context) ([]AuthorizationGroup, error) {
+	return List[AuthorizationGroup](ctx, c, authorizationGroupsPath, nil)
+}

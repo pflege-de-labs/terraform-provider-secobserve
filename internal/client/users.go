@@ -90,3 +90,8 @@ func (c *Client) DeleteUser(ctx context.Context, id int64) error {
 func (c *Client) UserByUsername(ctx context.Context, username string) (User, error) {
 	return FindByExactName[User](ctx, c, "user", usersPath, username, nil)
 }
+
+// Users lists every user.
+func (c *Client) Users(ctx context.Context) ([]User, error) {
+	return List[User](ctx, c, usersPath, nil)
+}

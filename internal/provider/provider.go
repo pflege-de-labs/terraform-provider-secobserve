@@ -293,6 +293,10 @@ func (p *secObserveProvider) ListResources(_ context.Context) []func() list.List
 	return []func() list.ListResource{
 		productresource.NewList,
 		productgroupresource.NewList,
+		userresource.NewList,
+		authorizationgroupresource.NewList,
+		generalruleresource.NewList,
+		licensepolicyresource.NewList,
 	}
 }
 

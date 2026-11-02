@@ -170,3 +170,8 @@ type productRuleRequest struct {
 	Product int64 `json:"product"`
 	RuleFields
 }
+
+// GeneralRules lists every general rule.
+func (c *Client) GeneralRules(ctx context.Context) ([]Rule, error) {
+	return List[Rule](ctx, c, generalRulesPath, nil)
+}
