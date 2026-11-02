@@ -18,6 +18,7 @@ var (
 	_ resource.ResourceWithValidateConfig = (*productGroupResource)(nil)
 	_ resource.ResourceWithUpgradeState   = (*productGroupResource)(nil)
 	_ resource.ResourceWithModifyPlan     = (*productGroupResource)(nil)
+	_ resource.ResourceWithIdentity       = (*productGroupResource)(nil)
 )
 
 // New returns the secobserve_product_group resource.
@@ -46,6 +47,12 @@ func (r *productGroupResource) Metadata(
 	_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse,
 ) {
 	resp.TypeName = req.ProviderTypeName + "_product_group"
+}
+
+func (r *productGroupResource) IdentitySchema(
+	ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse,
+) {
+	tfutil.IDIdentitySchema(ctx, req, resp)
 }
 
 func (r *productGroupResource) Configure(
@@ -82,6 +89,7 @@ func (r *productGroupResource) Create(
 	state.SecurityGate.Block = plan.SecurityGate.Block
 	state.BranchHousekeeping.Block = plan.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, state.ID)...)
 }
 
 func (r *productGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -107,6 +115,7 @@ func (r *productGroupResource) Read(ctx context.Context, req resource.ReadReques
 	refreshed.SecurityGate.Block = state.SecurityGate.Block
 	refreshed.BranchHousekeeping.Block = state.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *productGroupResource) Update(
@@ -141,6 +150,7 @@ func (r *productGroupResource) Update(
 	refreshed.SecurityGate.Block = plan.SecurityGate.Block
 	refreshed.BranchHousekeeping.Block = plan.BranchHousekeeping.Block
 	resp.Diagnostics.Append(resp.State.Set(ctx, refreshed)...)
+	resp.Diagnostics.Append(tfutil.SetIdentityID(ctx, resp.Identity, refreshed.ID)...)
 }
 
 func (r *productGroupResource) Delete(
@@ -176,6 +186,9 @@ func (r *productGroupResource) Delete(
 func (r *productGroupResource) ImportState(
 	ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse,
 ) {
+	if tfutil.ImportByIdentity(ctx, req, resp) {
+		return
+	}
 	if id, err := strconv.ParseInt(req.ID, 10, 64); err == nil {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 		return

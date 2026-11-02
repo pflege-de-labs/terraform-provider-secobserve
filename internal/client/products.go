@@ -198,6 +198,11 @@ func (c *Client) DeleteProductGroup(ctx context.Context, id int64, name string) 
 	return c.Delete(ctx, fmt.Sprintf("%s%d/", productGroupsPath, id), url.Values{"name": {name}})
 }
 
+// ProductGroups lists every product group.
+func (c *Client) ProductGroups(ctx context.Context) ([]Product, error) {
+	return List[Product](ctx, c, productGroupsPath, nil)
+}
+
 // ProductGroupByName resolves a product group by name. Products and product
 // groups share one unique constraint on the name.
 func (c *Client) ProductGroupByName(ctx context.Context, name string) (Product, error) {

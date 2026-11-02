@@ -292,6 +292,7 @@ func (p *secObserveProvider) DataSources(_ context.Context) []func() datasource.
 func (p *secObserveProvider) ListResources(_ context.Context) []func() list.ListResource {
 	return []func() list.ListResource{
 		productresource.NewList,
+		productgroupresource.NewList,
 	}
 }
 

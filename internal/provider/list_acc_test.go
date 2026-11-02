@@ -45,8 +45,11 @@ func expectIdentity(address string) []statecheck.StateCheck {
 	}
 }
 
-func TestAccProductList(t *testing.T) {
-	name := acceptanceName("product")
+// testAccList creates one object from config (whose resource is named
+// "test"), lists it with terraform query, then re-imports it by identity.
+func testAccList(t *testing.T, resourceType, config, displayName string) {
+	t.Helper()
+	address := resourceType + ".test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -54,22 +57,34 @@ func TestAccProductList(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:            fmt.Sprintf(`resource "secobserve_product" "test" { name = %q }`, name),
-				ConfigStateChecks: expectIdentity("secobserve_product.test"),
+				Config:            config,
+				ConfigStateChecks: expectIdentity(address),
 			},
 			{
 				Query:             true,
-				Config:            listQuery("secobserve_product", "all"),
-				QueryResultChecks: expectListed("secobserve_product.all", name),
+				Config:            listQuery(resourceType, "all"),
+				QueryResultChecks: expectListed(resourceType+".all", displayName),
 			},
 			{
-				ResourceName: "secobserve_product.test",
+				ResourceName: address,
 				ImportState:  true,
 				// Plannable import asserts a no-op plan, stronger than ImportStateVerify.
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 			},
 		},
 	})
+}
+
+func TestAccProductList(t *testing.T) {
+	name := acceptanceName("product")
+	testAccList(t, "secobserve_product",
+		fmt.Sprintf(`resource "secobserve_product" "test" { name = %q }`, name), name)
+}
+
+func TestAccProductGroupList(t *testing.T) {
+	name := acceptanceName("group")
+	testAccList(t, "secobserve_product_group",
+		fmt.Sprintf(`resource "secobserve_product_group" "test" { name = %q }`, name), name)
 }
 
 // State written by a provider without identity support must refresh cleanly.
